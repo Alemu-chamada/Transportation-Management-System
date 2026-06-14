@@ -171,7 +171,7 @@ All important actions are logged to the `audit_logs` table for full traceability
 
 ---
 
-## 📄 License
+## 📄 License(MIT)
 
 This project is licensed under the MIT License.
  
