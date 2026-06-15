@@ -191,9 +191,12 @@ const sendOtpEmail = async ({ to, otp }) => {
   } catch (error) {
     logger.error("Failed to send OTP email", {
       error: error.message,
+      errorCode: error.code,
+      errorCommand: error.command,
+      errorResponse: error.response,
       recipient: to,
     });
-    throw new Error("Failed to send OTP email. Please try again later.");
+    throw new Error(`Failed to send OTP email: ${error.message}`);
   }
 };
 
