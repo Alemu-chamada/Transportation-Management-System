@@ -13,14 +13,22 @@ const initializeTransporter = () => {
   try {
     transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 587,
-      secure: false, // Use TLS
+      port: 465,
+      secure: true,
       auth: {
         user: env.emailUser,
         pass: env.emailPass,
-      },
-      tls: {
-        rejectUnauthorized: false
+      }
+    });
+
+    // Test SMTP connection
+    transporter.verify((error, success) => {
+      if (error) {
+        console.error("SMTP Verify Error:", error);
+        logger.error("SMTP verification failed", { error: error.message });
+      } else {
+        console.log("SMTP Server Ready");
+        logger.info("SMTP Server Ready");
       }
     });
 
