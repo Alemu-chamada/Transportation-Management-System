@@ -157,3 +157,4 @@ deployment/.env.production
 deployment/.env.local
 deployment/secrets.txt
 deployment/production-secrets.txt
+.vscode/
