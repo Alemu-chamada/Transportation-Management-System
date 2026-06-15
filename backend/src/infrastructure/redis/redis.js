@@ -2,42 +2,44 @@ const Redis = require("ioredis");
 const env = require("../../config/env.js");
 const logger = require("../../shared/utils/logger.js");
 
-// Make Redis optional - won't crash if connection fails
-let redis;
+// Create a mock redis client that does nothing
+const createMockRedis = () => ({
+  get: async () => null,
+  set: async () => 'OK',
+  del: async () => 1,
+  setex: async () => 'OK',
+  expire: async () => 1,
+  exists: async () => 0,
+  ping: async () => 'PONG',
+  on: () => {},
+  quit: async () => 'OK'
+});
 
-try {
-  redis = new Redis(env.redisUrl, {
-    maxRetriesPerRequest: 2,
-    enableReadyCheck: true,
-    retryStrategy: (times) => {
-      // Stop retrying after 3 attempts
-      if (times > 3) {
-        logger.warn("Redis connection failed after 3 attempts. Continuing without Redis.");
-        return null; // Stop retrying
-      }
-      return Math.min(times * 100, 3000);
-    }
-  });
+// Don't use Redis if URL is localhost (production without Redis)
+if (env.redisUrl.includes('localhost')) {
+  logger.warn("Redis disabled - using mock client (no caching)");
+  module.exports = createMockRedis();
+} else {
+  // Try to connect to real Redis
+  try {
+    const redis = new Redis(env.redisUrl, {
+      maxRetriesPerRequest: 1,
+      enableReadyCheck: false,
+      lazyConnect: true,
+      retryStrategy: () => null // Don't retry
+    });
 
-  redis.on("connect", () => {
-    logger.info("Redis connected");
-  });
+    redis.on("connect", () => {
+      logger.info("Redis connected");
+    });
 
-  redis.on("error", (error) => {
-    logger.warn("Redis connection error (app will continue without Redis)", { message: error.message });
-  });
-} catch (error) {
-  logger.warn("Redis initialization failed. App will run without Redis cache.", { error: error.message });
-  // Create a mock redis client that does nothing
-  redis = {
-    get: async () => null,
-    set: async () => 'OK',
-    del: async () => 1,
-    setex: async () => 'OK',
-    expire: async () => 1,
-    exists: async () => 0,
-    ping: async () => 'PONG'
-  };
+    redis.on("error", (error) => {
+      logger.warn("Redis error (continuing without Redis)", { message: error.message });
+    });
+
+    module.exports = redis;
+  } catch (error) {
+    logger.warn("Redis initialization failed - using mock client", { error: error.message });
+    module.exports = createMockRedis();
+  }
 }
-
-module.exports = redis;
