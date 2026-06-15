@@ -153,6 +153,17 @@ const me = asyncHandler(async (req, res) => {
   });
 });
 
+const resendOtp = asyncHandler(async (req, res) => {
+  logger.info('[AUTH CONTROLLER] resendOtp request body:', req.body);
+  const result = await authService.resendOtp(req.body);
+  logger.info('[AUTH CONTROLLER] resendOtp result:', result);
+
+  return success(res, {
+    message: "OTP resent successfully",
+    data: result
+  });
+});
+
 module.exports = {
   register,
   login,
@@ -161,5 +172,6 @@ module.exports = {
   sendChangePhoneOtp,
   sendChangePasswordOtp,
   logout,
-  me
+  me,
+  resendOtp
 };

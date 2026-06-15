@@ -106,6 +106,44 @@ Response:
 
 Auth never accepts client-selected roles. First registration always creates `role: "passenger"`.
 
+### Resend OTP
+
+```http
+POST /api/v1/auth/resend-otp
+Content-Type: application/json
+```
+
+```json
+{
+  "email": "passenger@example.com",
+  "purpose": "registration"
+}
+```
+
+or for login:
+
+```json
+{
+  "email": "passenger@example.com",
+  "purpose": "login"
+}
+```
+
+Response:
+
+```json
+{
+  "success": true,
+  "message": "OTP resent successfully",
+  "data": {
+    "expiresAt": "2026-06-03T10:15:00.000Z",
+    "userId": "user_id"
+  }
+}
+```
+
+Valid purposes: `registration` or `login`.
+
 ### Get Current User
 
 ```http

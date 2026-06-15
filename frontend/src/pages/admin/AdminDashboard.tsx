@@ -21,25 +21,51 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { userApi } from "../../features/user/services";
+import { tripApi } from "../../features/trip/services";
+import { bookingApi } from "../../features/booking/services";
 
 export function AdminDashboard() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [totalUsers, setTotalUsers] = useState("0");
   const [totalDrivers, setTotalDrivers] = useState("0");
+  const [trips, setTrips] = useState([]);
+  const [totalTrips, setTotalTrips] = useState("0");
+  const [activeTrips, setActiveTrips] = useState("0");
+  const [bookings, setBookings] = useState([]);
+  const [totalBookings, setTotalBookings] = useState("0");
+  const [totalRevenue, setTotalRevenue] = useState("$0");
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchData = async () => {
       try {
-        const data = await userApi.getUsers();
-        setUsers(data.users);
-        setTotalUsers(data.users.length.toString());
-        setTotalDrivers(data.users.filter(u => u.role === "driver").length.toString());
+        // Fetch users
+        const userData = await userApi.getUsers();
+        setUsers(userData.users);
+        setTotalUsers(userData.users.length.toString());
+        setTotalDrivers(userData.users.filter((u: any) => u.role === "driver").length.toString());
+
+        // Fetch trips
+        const tripsData = await tripApi.getScheduledTrips();
+        setTrips(tripsData.trips);
+        setTotalTrips(tripsData.trips.length.toString());
+        setActiveTrips(tripsData.trips.filter((t: any) => t.status === "IN_PROGRESS" || t.status === "active").length.toString());
+
+        // Fetch bookings
+        const bookingsData = await bookingApi.getMyBookings();
+        setBookings(bookingsData.bookings);
+        setTotalBookings(bookingsData.bookings.length.toString());
+
+        // Calculate revenue
+        const revenue = bookingsData.bookings.reduce((sum: number, booking: any) => {
+          return sum + (booking.amount || 0);
+        }, 0);
+        setTotalRevenue(`$${revenue.toLocaleString()}`);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching data:", error);
       }
     };
-    fetchUsers();
+    fetchData();
   }, []);
 
   const metrics = [
@@ -48,42 +74,42 @@ export function AdminDashboard() {
       value: totalUsers,
       icon: Users,
       iconColor: "bg-blue-500",
-      trend: { value: "Updated live", isPositive: true },
+      trend: { value: "Live data", isPositive: true },
     },
     {
       label: "Total Drivers",
       value: totalDrivers,
       icon: Car,
       iconColor: "bg-green-500",
-      trend: { value: "Updated live", isPositive: true },
+      trend: { value: "Live data", isPositive: true },
     },
     {
       label: "Total Trips",
-      value: "1,234",
+      value: totalTrips,
       icon: MapPin,
       iconColor: "bg-purple-500",
-      trend: { value: "15% from last month", isPositive: true },
+      trend: { value: "Live data", isPositive: true },
     },
     {
       label: "Active Trips",
-      value: "45",
+      value: activeTrips,
       icon: TrendingUp,
       iconColor: "bg-orange-500",
-      trend: { value: "3% from last hour", isPositive: false },
+      trend: { value: "Live data", isPositive: true },
     },
     {
       label: "Total Bookings",
-      value: "2,890",
+      value: totalBookings,
       icon: Calendar,
       iconColor: "bg-pink-500",
-      trend: { value: "20% from last month", isPositive: true },
+      trend: { value: "Live data", isPositive: true },
     },
     {
       label: "Revenue",
-      value: "$124,580",
+      value: totalRevenue,
       icon: DollarSign,
       iconColor: "bg-emerald-500",
-      trend: { value: "18% from last month", isPositive: true },
+      trend: { value: "Live data", isPositive: true },
     },
   ];
 

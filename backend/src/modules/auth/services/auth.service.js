@@ -385,6 +385,50 @@ const logout = async (userId) => {
   return { message: "Logged out successfully" };
 };
 
+const resendOtp = async ({ email, phone, purpose }) => {
+  logger.info("Resending OTP", {
+    hasEmail: !!email,
+    hasPhone: !!phone,
+    purpose,
+  });
+
+  if (!email && !phone) {
+    throw new ApiError(422, "Either email or phone is required.", "VALIDATION_ERROR");
+  }
+
+  if (!purpose || (purpose !== "registration" && purpose !== "login")) {
+    throw new ApiError(422, "Valid purpose is required (registration or login).", "VALIDATION_ERROR");
+  }
+
+  // Verify user exists
+  const user = await userService.findByEmailOrPhone({ email, phone });
+  if (!user) {
+    throw new ApiError(401, "User not found.", "USER_NOT_FOUND");
+  }
+
+  // For registration purpose, ensure user is not already active
+  if (purpose === "registration" && user.is_active) {
+    throw new ApiError(400, "Account is already verified.", "ALREADY_VERIFIED");
+  }
+
+  // Generate and send new OTP
+  const result = await otpService.createOtp({
+    email,
+    phone,
+    userId: user.id,
+    purpose,
+  });
+
+  await auditService.log({
+    actorId: user.id,
+    action: "OTP_RESENT",
+    entityType: "auth",
+    metadata: { purpose },
+  });
+
+  return { success: true, expiresAt: result.expiresAt, userId: user.id };
+};
+
 module.exports = {
   generateAuthTokens,
   register,
@@ -395,4 +439,5 @@ module.exports = {
   sendChangePasswordOtp,
   refreshAuthTokens,
   logout,
+  resendOtp,
 };

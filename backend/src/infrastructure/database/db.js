@@ -2,12 +2,18 @@ const { Pool } = require("pg");
 const env = require("../../config/env.js");
 const logger = require("../../shared/utils/logger.js");
 
+// Configure SSL for production (Neon requires SSL)
+const sslConfig = env.nodeEnv === 'production' 
+  ? { rejectUnauthorized: true }
+  : false;
+
 const pool = new Pool({
   host: env.pg.host,
   port: env.pg.port,
   database: env.pg.database,
   user: env.pg.user,
   password: env.pg.password,
+  ssl: sslConfig,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000

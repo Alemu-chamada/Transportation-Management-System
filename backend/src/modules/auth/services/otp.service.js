@@ -5,6 +5,7 @@ const { hashValue, compareHash } = require("../../../shared/utils/hash.js");
 const ApiError = require("../../../shared/utils/apiError.js");
 const logger = require("../../../shared/utils/logger.js");
 const userService = require("../../user/services/user.service.js");
+const emailService = require("../../../shared/services/email.service.js");
 
 const generateOtpCode = () => {
   return crypto.randomInt(100000, 1000000).toString();
@@ -40,13 +41,6 @@ const createOtp = async ({ email, phone, userId, purpose = "login", password }) 
   if (purpose === "change_phone") purposeLabel = "change_phone";
   if (purpose === "change_password") purposeLabel = "change_password";
 
-  logger.info("OTP generated - dev mode only", {
-    channel: email ? "email" : "phone",
-    recipient: contact,
-    purpose: purposeLabel,
-    code: env.nodeEnv === "production" ? undefined : code,
-  });
-
   await db.query(
     `
     INSERT INTO otp_codes (user_id, contact, code_hash, purpose, expires_at)
@@ -56,15 +50,34 @@ const createOtp = async ({ email, phone, userId, purpose = "login", password }) 
     [userId || null, contact, codeHash, purpose, expiresAt]
   );
 
-  logger.info("OTP generated", {
-    channel: email ? "email" : "phone",
-    recipient: contact,
-    purpose,
-  });
+  // Send OTP via email if email is provided
+  if (email) {
+    try {
+      await emailService.sendOtpEmail({
+        to: contact,
+        otp: code,
+      });
+      logger.info("OTP sent via email", {
+        recipient: contact,
+        purpose: purposeLabel,
+      });
+    } catch (emailError) {
+      logger.error("Failed to send OTP email", {
+        error: emailError.message,
+        recipient: contact,
+      });
+      throw new ApiError(500, "Failed to send OTP. Please try again later.", "EMAIL_SEND_FAILED");
+    }
+  } else {
+    // For phone-based OTP, log that SMS is not implemented
+    logger.info("OTP generated for phone (SMS not implemented)", {
+      recipient: contact,
+      purpose: purposeLabel,
+    });
+  }
 
   return {
     expiresAt: expiresAt,
-    code: env.nodeEnv === "production" ? undefined : code,
   };
 };
 

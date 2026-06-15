@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { Card } from "../shared/ui/Card";
 import { Button } from "../shared/ui/Button";
 import { MainLayout } from "../routes/MainLayout";
+import { MetricCard } from "../shared/ui/MetricCard";
 import {
   MapPin,
   Navigation,
@@ -24,9 +25,15 @@ import {
   ChevronRight,
   ArrowRight,
   Loader2,
+  Car,
+  Plus,
+  FileText,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "../providers/AuthProvider";
 import { bookingApi } from "../features/booking/services";
+import { userApi } from "../features/user/services";
+import { tripApi } from "../features/trip/services";
 
 export function Home() {
   const navigate = useNavigate();
@@ -34,6 +41,14 @@ export function Home() {
   const [backendStatus, setBackendStatus] = useState("Checking...");
   const [myBookings, setMyBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [totalUsers, setTotalUsers] = useState("0");
+  const [totalDrivers, setTotalDrivers] = useState("0");
+  const [trips, setTrips] = useState([]);
+  const [totalTrips, setTotalTrips] = useState("0");
+  const [activeTrips, setActiveTrips] = useState("0");
+  const [totalBookings, setTotalBookings] = useState("0");
+  const [totalRevenue, setTotalRevenue] = useState("$0");
 
   useEffect(() => {
     const backendUrl =
@@ -57,12 +72,43 @@ export function Home() {
     const loadData = async () => {
       try {
         if (user) {
-          const bookingsData = await bookingApi.getMyBookings();
-          setMyBookings(bookingsData.bookings || []);
+          // Load bookings
+          try {
+            const bookingsData = await bookingApi.getMyBookings();
+            setMyBookings(bookingsData.bookings || []);
+            setTotalBookings(bookingsData.bookings?.length.toString() || "0");
+          } catch (error) {
+            console.error("Failed to load bookings:", error);
+          }
+
+          // Load users data
+          try {
+            const userData = await userApi.getUsers();
+            setUsers(userData.users || []);
+            setTotalUsers(userData.users?.length.toString() || "0");
+            setTotalDrivers(userData.users?.filter((u: any) => u.role === "driver").length.toString() || "0");
+          } catch (error) {
+            console.error("Failed to load users:", error);
+          }
+
+          // Load trips data
+          try {
+            const tripsData = await tripApi.getScheduledTrips();
+            setTrips(tripsData.trips || []);
+            setTotalTrips(tripsData.trips?.length.toString() || "0");
+            setActiveTrips(tripsData.trips?.filter((t: any) => t.status === "IN_PROGRESS").length.toString() || "0");
+            
+            // Calculate revenue from bookings
+            const revenue = bookingsData.bookings?.reduce((sum: number, booking: any) => {
+              return sum + (booking.amount || 0);
+            }, 0) || 0;
+            setTotalRevenue(`$${revenue.toLocaleString()}`);
+          } catch (error) {
+            console.error("Failed to load trips:", error);
+          }
         }
       } catch (error) {
         console.error("Failed to load data:", error);
-        // Mock data is already handled in the service layer
       } finally {
         setLoading(false);
       }
@@ -185,6 +231,98 @@ export function Home() {
 
   const features = getFeatures();
 
+  // Metrics available to all users
+  const metrics = [
+    {
+      label: "Total Users",
+      value: totalUsers,
+      icon: Users,
+      iconColor: "bg-blue-500",
+      trend: { value: "Live data", isPositive: true },
+    },
+    {
+      label: "Total Drivers",
+      value: totalDrivers,
+      icon: Car,
+      iconColor: "bg-green-500",
+      trend: { value: "Live data", isPositive: true },
+    },
+    {
+      label: "Total Trips",
+      value: totalTrips,
+      icon: MapPin,
+      iconColor: "bg-purple-500",
+      trend: { value: "Live data", isPositive: true },
+    },
+    {
+      label: "Active Trips",
+      value: activeTrips,
+      icon: TrendingUp,
+      iconColor: "bg-orange-500",
+      trend: { value: "Live data", isPositive: true },
+    },
+    {
+      label: "Total Bookings",
+      value: totalBookings,
+      icon: Calendar,
+      iconColor: "bg-pink-500",
+      trend: { value: "Live data", isPositive: true },
+    },
+    {
+      label: "Revenue",
+      value: totalRevenue,
+      icon: DollarSign,
+      iconColor: "bg-emerald-500",
+      trend: { value: "Live data", isPositive: true },
+    },
+  ];
+
+  // Admin-specific navigation links (only shown to system_admin)
+  const adminLinks = [
+    { label: "User Management", icon: Users, path: "/admin/users" },
+    { label: "Trip Management", icon: MapPin, path: "/admin/trips" },
+    { label: "Booking Management", icon: Calendar, path: "/admin/bookings" },
+    { label: "Payment Management", icon: CreditCard, path: "/admin/payments" },
+    { label: "Tracking Monitor", icon: TrendingUp, path: "/admin/tracking" },
+    { label: "Audit Logs", icon: FileText, path: "/admin/audit-logs" },
+    { label: "System Health", icon: Activity, path: "/admin/system-health" },
+  ];
+
+  // Admin-specific quick actions (only shown to system_admin)
+  const adminQuickActions = [
+    { label: "Create Trip", icon: Plus, path: "/admin/trips/create" },
+    { label: "Manage Users", icon: Users, path: "/admin/users" },
+    { label: "Audit Logs", icon: FileText, path: "/admin/audit-logs" },
+    { label: "System Health", icon: Activity, path: "/admin/system-health" },
+  ];
+
+  const recentActivity = [
+    {
+      id: 1,
+      action: "New user registration",
+      user: "John Doe",
+      time: "5 mins ago",
+    },
+    {
+      id: 2,
+      action: "Trip created",
+      user: "Admin User",
+      time: "15 mins ago",
+    },
+    {
+      id: 3,
+      action: "Booking confirmed",
+      user: "Sarah Wilson",
+      time: "30 mins ago",
+    },
+    {
+      id: 4,
+      action: "Payment received",
+      user: "Mike Chen",
+      time: "1 hour ago",
+    },
+  ];
+
   if (loading) {
     return (
       <MainLayout>
@@ -204,13 +342,29 @@ export function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-4xl font-bold text-foreground mb-2">
+                Dashboard
+              </h1>
+              <p className="text-muted-foreground">
+                Monitor and manage your transportation system
+              </p>
+            </div>
+            {user?.role === "system_admin" && (
+              <Button onClick={() => navigate("/admin/settings")}>
+                <Settings className="h-5 w-5" />
+                Settings
+              </Button>
+            )}
+          </div>
           <Card className="p-8 bg-muted">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-foreground">
+                  <h2 className="text-2xl font-bold text-foreground">
                     Welcome back, {user?.full_name}!
-                  </h1>
+                  </h2>
                   <span className="px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-medium">
                     {user?.role.charAt(0).toUpperCase() + user?.role.slice(1)}
                   </span>
@@ -237,6 +391,158 @@ export function Home() {
             </div>
           </Card>
         </motion.div>
+
+        {/* Admin Navigation - Only for system_admin */}
+        {user?.role === "system_admin" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">Admin Navigation</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {adminLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <button
+                      key={link.label}
+                      onClick={() => navigate(link.path)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+                    >
+                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-foreground">{link.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Metrics - Available to all users */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {metrics.map((metric, index) => (
+            <MetricCard key={metric.label} {...metric} delay={index * 0.1} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <Card className="p-8">
+                <h2 className="text-2xl font-bold text-foreground mb-6">
+                  Revenue Overview
+                </h2>
+                <div className="h-64 bg-gradient-to-br from-muted/50 to-background rounded-xl flex items-center justify-center">
+                  <div className="text-center">
+                    <TrendingUp className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <p className="text-muted-foreground">
+                      Chart visualization placeholder
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Revenue trend for the last 6 months
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+            >
+              <Card className="p-8">
+                <h2 className="text-2xl font-bold text-foreground mb-6">
+                  Booking Trends
+                </h2>
+                <div className="h-64 bg-gradient-to-br from-muted/50 to-background rounded-xl flex items-center justify-center">
+                  <div className="text-center">
+                    <Calendar className="h-12 w-12 text-primary mx-auto mb-3" />
+                    <p className="text-muted-foreground">
+                      Chart visualization placeholder
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Booking volume over time
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+
+          <div className="space-y-8">
+            {/* Admin Quick Actions - Only for system_admin */}
+            {user?.role === "system_admin" && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+              >
+                <Card className="p-6">
+                  <h3 className="font-bold text-foreground mb-4">
+                    Quick Actions
+                  </h3>
+                  <div className="space-y-2">
+                    {adminQuickActions.map((action) => {
+                      const Icon = action.icon;
+                      return (
+                        <button
+                          key={action.label}
+                          onClick={() => navigate(action.path)}
+                          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+                        >
+                          <Icon className="h-5 w-5 text-primary" />
+                          <span className="text-foreground">{action.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.9 }}
+            >
+              <Card className="p-6">
+                <h3 className="font-bold text-foreground mb-4">
+                  Recent Activity
+                </h3>
+                <div className="space-y-4">
+                  {recentActivity.map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0"
+                    >
+                      <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Activity className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {activity.action}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {activity.user}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {activity.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -273,8 +579,6 @@ export function Home() {
             </div>
           </Card>
         </motion.div>
-
-
 
         {/* Available Features Section */}
         <motion.div

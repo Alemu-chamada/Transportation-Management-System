@@ -2,24 +2,50 @@
 node_modules/
 .pnp
 .pnp.js
+bower_components/
+jspm_packages/
 
 # Build outputs
 dist/
 build/
 .next/
 out/
+.nuxt
+.vite
+.parcel-cache
 
-# Environment files
+# Environment files - NEVER COMMIT THESE
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+*.pem
+*.key
+*.cert
+
+# Database files
+*.sql.backup
+*.db
+*.sqlite
+*.sqlite3
+dump.sql
+dump.rdb
+TMSDB.sql
+local_backup.sql
+
+# Database backups (deployment)
+deployment/backups/
+backups/*.sql
+backups/*.sql.gz
 
 # Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 lerna-debug.log*
 
 # Runtime data
@@ -28,110 +54,106 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage directory
 coverage/
 *.lcov
-
-# nyc test coverage
 .nyc_output
 
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
+# Cache directories
+.cache
 .npm
-
-# Optional eslint cache
 .eslintcache
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variable files
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
 .parcel-cache
-
-# Next.js build output
-.next
-out
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-# Comment in the public line in if your project uses Gatsby and not Next.js
-# https://nextjs.org/blog/next-9-1#public-directory-support
-# public
-
-# vuepress build output
-.vuepress/dist
-
-# vuepress v2.x temp and cache directory
-.temp
-.cache
-
-# Docusaurus cache and generated files
-.docusaurus
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
 .fusebox/
-
-# DynamoDB Local files
 .dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-.pnp.*
 
-# Vite
-.vite
-dist
+# Test files (development only)
+test-*.js
+test-*.ts
+*.test.local.js
+*.spec.local.js
 
-# IDE files
-.vscode/
+# Backup files
+*.backup
+*.bak
+*.old
+*.tmp
+*.temp
+
+# Docker
+docker-compose.override.yml
+
+# IDE and Editor files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 *.swp
 *.swo
 *~
+.vscode-test
 
-# macOS
+# OS generated files
 .DS_Store
-
-# Windows
-Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 ehthumbs.db
+Thumbs.db
 Desktop.ini
 
-# Temporary files
-*.tmp
-*.temp
-*.log
+# Package manager files
+.pnp.*
+.yarn-integrity
+.node_repl_history
+*.tgz
+
+# Framework specific
+.next
+.nuxt
+.vuepress/dist
+.serverless/
+.tern-port
+.docusaurus
+.temp
 
 # Application specific
-# Any local config files, backups, etc.
+apply-database-fixes.js
+
+# Deployment artifacts to KEEP in repo (these are templates/scripts)
+# deployment/README.md
+# deployment/DEPLOYMENT_GUIDE.md
+# deployment/QUICK_START.md
+# deployment/DEPLOYMENT_CHECKLIST.md
+# deployment/.env.backend.production.template
+# deployment/.env.frontend.production.template
+# deployment/generate-secrets.js
+# deployment/cors-config.js
+# deployment/health-check.js
+# deployment/neon-database-setup.sql
+# deployment/database-validation.sql
+# deployment/neon-db-config.js
+# deployment/render.yaml
+# deployment/vercel.json
+# deployment/.github-workflows-deploy.yml
+# deployment/backup-database.sh
+# deployment/restore-database.sh
+# DEPLOYMENT_COMPLETE.md
+
+# DO NOT COMMIT - Deployment outputs and generated files
+deployment/.vercel/
+deployment/.env
+deployment/.env.production
+deployment/.env.local
+deployment/secrets.txt
+deployment/production-secrets.txt

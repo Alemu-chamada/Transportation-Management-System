@@ -1,0 +1,158 @@
+# =============================================================================
+# Render Blueprint Configuration
+# Transportation Management System
+# =============================================================================
+# This file defines infrastructure-as-code for Render.com deployment
+# Place this file in the root of your repository
+# Render will automatically detect and use it
+# =============================================================================
+
+services:
+  # Backend Web Service
+  - type: web
+    name: tms-backend
+    env: node
+    region: oregon # Choose: oregon, frankfurt, singapore
+    plan: starter # Options: free, starter, standard, pro
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      # Node Environment
+      - key: NODE_ENV
+        value: production
+      
+      - key: PORT
+        value: 5002
+      
+      # Database - Neon PostgreSQL
+      # Add these in Render Dashboard as they contain secrets
+      - key: PGHOST
+        sync: false
+      
+      - key: PGPORT
+        value: 5432
+      
+      - key: PGDATABASE
+        sync: false
+      
+      - key: PGUSER
+        sync: false
+      
+      - key: PGPASSWORD
+        sync: false
+      
+      # Redis - Upstash
+      - key: REDIS_URL
+        sync: false
+      
+      # JWT Secrets (generate with: node deployment/generate-secrets.js)
+      - key: JWT_SECRET
+        sync: false
+        generateValue: true
+      
+      - key: JWT_REFRESH_SECRET
+        sync: false
+        generateValue: true
+      
+      - key: JWT_EXPIRES_IN
+        value: 1h
+      
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      
+      # Email Configuration
+      - key: EMAIL_USER
+        value: smartTransportserv@gmail.com
+      
+      - key: EMAIL_PASS
+        sync: false
+      
+      # OTP Configuration
+      - key: OTP_EXPIRES_IN_MINUTES
+        value: 5
+      
+      # Booking Configuration
+      - key: BOOKING_RESERVATION_MINUTES
+        value: 15
+      
+      # Payment Gateway (configure if applicable)
+      - key: PAYMENT_WEBHOOK_SECRET
+        sync: false
+      
+      - key: PAYMENT_SESSION_BASE_URL
+        value: https://payments.example.com
+      
+      # CORS - Update after Vercel deployment
+      - key: FRONTEND_URL
+        value: https://tms.vercel.app
+      
+      - key: ALLOWED_ORIGINS
+        value: https://tms.vercel.app
+      
+      # Logging
+      - key: LOG_LEVEL
+        value: info
+      
+      # Session Secret
+      - key: SESSION_SECRET
+        sync: false
+        generateValue: true
+
+# =============================================================================
+# DEPLOYMENT INSTRUCTIONS
+# =============================================================================
+# 
+# OPTION 1: Deploy from Dashboard
+# 1. Go to https://dashboard.render.com
+# 2. Click "New +" → "Blueprint"
+# 3. Connect your GitHub repository
+# 4. Render will detect this render.yaml file
+# 5. Fill in the secret environment variables:
+#    - PGHOST, PGDATABASE, PGUSER, PGPASSWORD (from Neon)
+#    - REDIS_URL (from Upstash)
+#    - JWT_SECRET, JWT_REFRESH_SECRET (generate with generate-secrets.js)
+#    - EMAIL_PASS (Gmail app password)
+#    - PAYMENT_WEBHOOK_SECRET (if using payments)
+# 6. Click "Apply"
+# 
+# OPTION 2: Deploy via CLI
+# 1. Install Render CLI: npm install -g @render/cli
+# 2. Login: render login
+# 3. Deploy: render up
+# 
+# OPTION 3: Deploy from Git (Recommended)
+# 1. Push this file to your GitHub repository
+# 2. Connect repository in Render Dashboard
+# 3. Render auto-detects and deploys
+# 4. Add secret environment variables in Render Dashboard
+# 
+# =============================================================================
+# POST-DEPLOYMENT
+# =============================================================================
+# 
+# After deployment:
+# 1. Note your backend URL: https://tms-backend.onrender.com
+# 2. Test health endpoint: curl https://tms-backend.onrender.com/api/v1/health
+# 3. Update FRONTEND_URL in Render after Vercel deployment
+# 4. Update VITE_API_URL in Vercel with your Render backend URL
+# 5. Test the full flow: registration → OTP → login → dashboard
+# 
+# =============================================================================
+# SCALING & UPGRADES
+# =============================================================================
+# 
+# To upgrade your plan:
+# 1. Go to Render Dashboard → Your Service
+# 2. Click "Settings"
+# 3. Change "Instance Type" from Starter to Standard/Pro
+# 4. Adjust "Autoscaling" settings if needed
+# 
+# Recommended production settings:
+# - Plan: Standard or higher
+# - Instances: 2+ for high availability
+# - Autoscaling: Min 2, Max 10 instances
+# - Health Check: Enabled
+# - Zero Downtime Deploy: Enabled
+# 
+# =============================================================================

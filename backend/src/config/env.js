@@ -20,7 +20,9 @@ const env = {
   otpExpiresInMinutes: Number(process.env.OTP_EXPIRES_IN_MINUTES || 10),
   bookingReservationMinutes: Number(process.env.BOOKING_RESERVATION_MINUTES || 15),
   paymentWebhookSecret: process.env.PAYMENT_WEBHOOK_SECRET || "change_me_payment_webhook_secret",
-  paymentSessionBaseUrl: process.env.PAYMENT_SESSION_BASE_URL || "https://payments.example.test/checkout"
+  paymentSessionBaseUrl: process.env.PAYMENT_SESSION_BASE_URL || "https://payments.example.test/checkout",
+  emailUser: process.env.EMAIL_USER || "",
+  emailPass: process.env.EMAIL_PASS || ""
 };
 
 if (env.nodeEnv === "production" && env.jwtSecret === "change_me_in_production") {

@@ -1,0 +1,214 @@
+# =============================================================================
+# GitHub Actions CI/CD Pipeline
+# Transportation Management System
+# =============================================================================
+# This workflow automatically deploys to Vercel and Render on push to main
+# Save this file as: .github/workflows/deploy.yml
+# =============================================================================
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  # Backend Tests (Optional - add when you have tests)
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+      
+      # Uncomment when you have tests
+      # - name: Run backend tests
+      #   run: cd backend && npm test
+      #   env:
+      #     NODE_ENV: test
+      
+      - name: Run ESLint
+        run: cd backend && npm run lint --if-present
+        continue-on-error: true
+
+  # Frontend Tests (Optional - add when you have tests)
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+      
+      # Uncomment when you have tests
+      # - name: Run frontend tests
+      #   run: cd frontend && npm test
+      
+      - name: Run ESLint
+        run: cd frontend && npm run lint --if-present
+        continue-on-error: true
+      
+      - name: Type check
+        run: cd frontend && npm run type-check --if-present
+        continue-on-error: true
+
+  # Deploy Frontend to Vercel
+  deploy-frontend:
+    name: Deploy Frontend (Vercel)
+    runs-on: ubuntu-latest
+    needs: [frontend-test]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+      
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      
+      - name: Deploy to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Deploy Backend to Render (via webhook)
+  deploy-backend:
+    name: Deploy Backend (Render)
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Trigger Render Deployment
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      
+      - name: Wait for deployment
+        run: sleep 60
+      
+      - name: Health check
+        run: |
+          for i in {1..10}; do
+            if curl -f ${{ secrets.BACKEND_URL }}/api/v1/health; then
+              echo "Backend is healthy!"
+              exit 0
+            fi
+            echo "Waiting for backend... (attempt $i/10)"
+            sleep 10
+          done
+          echo "Backend health check failed"
+          exit 1
+
+  # Notify deployment status
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-frontend, deploy-backend]
+    if: always()
+    
+    steps:
+      - name: Deployment Success
+        if: ${{ needs.deploy-frontend.result == 'success' && needs.deploy-backend.result == 'success' }}
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Frontend: ${{ secrets.FRONTEND_URL }}"
+          echo "Backend: ${{ secrets.BACKEND_URL }}"
+      
+      - name: Deployment Failed
+        if: ${{ needs.deploy-frontend.result == 'failure' || needs.deploy-backend.result == 'failure' }}
+        run: |
+          echo "❌ Deployment failed!"
+          exit 1
+
+# =============================================================================
+# GITHUB SECRETS SETUP
+# =============================================================================
+# 
+# Add these secrets in: GitHub Repository → Settings → Secrets and variables → Actions
+# 
+# VERCEL:
+# - VERCEL_TOKEN: Get from https://vercel.com/account/tokens
+# - VERCEL_ORG_ID: Found in .vercel/project.json after first deploy
+# - VERCEL_PROJECT_ID: Found in .vercel/project.json after first deploy
+# 
+# RENDER:
+# - RENDER_DEPLOY_HOOK_URL: Get from Render Dashboard → Service → Settings → Deploy Hook
+# - BACKEND_URL: Your Render backend URL (e.g., https://tms-backend.onrender.com)
+# 
+# OTHER:
+# - FRONTEND_URL: Your Vercel frontend URL (e.g., https://tms.vercel.app)
+# 
+# =============================================================================
+# SETUP INSTRUCTIONS
+# =============================================================================
+# 
+# 1. Copy this file to: .github/workflows/deploy.yml
+# 
+# 2. Set up Vercel:
+#    - Deploy once manually: cd frontend && vercel --prod
+#    - Get VERCEL_ORG_ID and VERCEL_PROJECT_ID from .vercel/project.json
+#    - Get VERCEL_TOKEN from https://vercel.com/account/tokens
+#    - Add all three to GitHub Secrets
+# 
+# 3. Set up Render:
+#    - Go to Render Dashboard → Your Service → Settings
+#    - Scroll to "Deploy Hook"
+#    - Click "Create Deploy Hook"
+#    - Copy the URL and add to GitHub Secrets as RENDER_DEPLOY_HOOK_URL
+# 
+# 4. Add URLs to GitHub Secrets:
+#    - BACKEND_URL: https://tms-backend.onrender.com
+#    - FRONTEND_URL: https://tms.vercel.app
+# 
+# 5. Test:
+#    - Push to main branch
+#    - Check Actions tab in GitHub
+#    - Verify deployment completes successfully
+# 
+# =============================================================================

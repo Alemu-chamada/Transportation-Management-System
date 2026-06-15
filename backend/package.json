@@ -17,10 +17,12 @@
     "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "nodemailer": "^9.0.0",
     "pg": "^8.13.1",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "axios": "^1.18.0",
     "eslint": "^9.18.0",
     "nodemon": "^3.1.9"
   },
