@@ -18,6 +18,8 @@ import {
   ShieldCheck,
   CreditCard,
   Bell,
+  ChevronRight,
+  Clock,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { userApi } from "../../features/user/services";
@@ -130,32 +132,12 @@ export function AdminDashboard() {
     { label: "System Health", icon: Activity, path: "/admin/system-health" },
   ];
 
-  const recentActivity = [
-    {
-      id: 1,
-      action: "New user registration",
-      user: "John Doe",
-      time: "5 mins ago",
-    },
-    {
-      id: 2,
-      action: "Trip created",
-      user: "Admin User",
-      time: "15 mins ago",
-    },
-    {
-      id: 3,
-      action: "Booking confirmed",
-      user: "Sarah Wilson",
-      time: "30 mins ago",
-    },
-    {
-      id: 4,
-      action: "Payment received",
-      user: "Mike Chen",
-      time: "1 hour ago",
-    },
-  ];
+  const formatTime = (dateString: string) =>
+    new Date(dateString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString([], { month: "short", day: "numeric" });
+
+  const recentTrips = (trips as any[]).slice(0, 5);
 
   return (
     <MainLayout>
@@ -187,18 +169,21 @@ export function AdminDashboard() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Card className="p-6">
-            <h2 className="text-xl font-bold text-foreground mb-4">Admin Navigation</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <h2 className="text-lg font-semibold text-foreground mb-4">Admin Navigation</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {adminLinks.map((link) => {
                 const Icon = link.icon;
                 return (
                   <button
                     key={link.label}
                     onClick={() => navigate(link.path)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted hover:border-primary/20 border border-transparent transition-all text-left group"
                   >
-                    <Icon className="h-5 w-5 text-primary" />
-                    <span className="text-foreground">{link.label}</span>
+                    <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
+                      <Icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-foreground text-sm font-medium">{link.label}</span>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 );
               })}
@@ -219,19 +204,23 @@ export function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
             >
-              <Card className="p-8">
-                <h2 className="text-2xl font-bold text-foreground mb-6">
-                  Revenue Overview
-                </h2>
-                <div className="h-64 bg-gradient-to-br from-muted/50 to-background rounded-xl flex items-center justify-center">
-                  <div className="text-center">
-                    <TrendingUp className="h-12 w-12 text-primary mx-auto mb-3" />
-                    <p className="text-muted-foreground">
-                      Chart visualization placeholder
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Revenue trend for the last 6 months
-                    </p>
+              <Card className="p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">Revenue Summary</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-xl bg-muted/60">
+                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Total Revenue</p>
+                    <p className="text-3xl font-bold text-foreground">{totalRevenue}</p>
+                    <p className="text-xs text-muted-foreground mt-1">From bookings</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-muted/60">
+                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Total Bookings</p>
+                    <p className="text-3xl font-bold text-foreground">{totalBookings}</p>
+                    <p className="text-xs text-muted-foreground mt-1">All time</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-muted/60">
+                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Active Trips</p>
+                    <p className="text-3xl font-bold text-foreground">{activeTrips}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Currently running</p>
                   </div>
                 </div>
               </Card>
@@ -242,19 +231,23 @@ export function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.7 }}
             >
-              <Card className="p-8">
-                <h2 className="text-2xl font-bold text-foreground mb-6">
-                  Booking Trends
-                </h2>
-                <div className="h-64 bg-gradient-to-br from-muted/50 to-background rounded-xl flex items-center justify-center">
-                  <div className="text-center">
-                    <Calendar className="h-12 w-12 text-primary mx-auto mb-3" />
-                    <p className="text-muted-foreground">
-                      Chart visualization placeholder
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Booking volume over time
-                    </p>
+              <Card className="p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-4">System Overview</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-xl bg-muted/60">
+                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Total Users</p>
+                    <p className="text-3xl font-bold text-foreground">{totalUsers}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Registered users</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-muted/60">
+                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Drivers</p>
+                    <p className="text-3xl font-bold text-foreground">{totalDrivers}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Active drivers</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-muted/60">
+                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Total Trips</p>
+                    <p className="text-3xl font-bold text-foreground">{totalTrips}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Scheduled trips</p>
                   </div>
                 </div>
               </Card>
@@ -268,20 +261,21 @@ export function AdminDashboard() {
               transition={{ duration: 0.5, delay: 0.8 }}
             >
               <Card className="p-6">
-                <h3 className="font-bold text-foreground mb-4">
+                <h3 className="font-semibold text-foreground mb-4">
                   Quick Actions
                 </h3>
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {quickActions.map((action) => {
                     const Icon = action.icon;
                     return (
                       <button
                         key={action.label}
                         onClick={() => navigate(action.path)}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-muted transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted hover:border-primary/20 border border-transparent transition-all text-left group"
                       >
-                        <Icon className="h-5 w-5 text-primary" />
-                        <span className="text-foreground">{action.label}</span>
+                        <Icon className="h-4 w-4 text-primary" />
+                        <span className="text-foreground text-sm">{action.label}</span>
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                       </button>
                     );
                   })}
@@ -295,32 +289,53 @@ export function AdminDashboard() {
               transition={{ duration: 0.5, delay: 0.9 }}
             >
               <Card className="p-6">
-                <h3 className="font-bold text-foreground mb-4">
-                  Recent Activity
-                </h3>
-                <div className="space-y-4">
-                  {recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0"
-                    >
-                      <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Activity className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {activity.action}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {activity.user}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {activity.time}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-foreground">Recent Trips</h3>
+                  <button
+                    onClick={() => navigate("/admin/trips")}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    View all
+                  </button>
                 </div>
+                {recentTrips.length === 0 ? (
+                  <div className="text-center py-6">
+                    <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No trips yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {recentTrips.map((trip: any) => (
+                      <div
+                        key={trip.id}
+                        className="flex items-start gap-3 pb-3 border-b border-border last:border-0 last:pb-0"
+                      >
+                        <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <MapPin className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {trip.origin} → {trip.destination}
+                          </p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <Clock className="h-3 w-3 text-muted-foreground" />
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(trip.scheduled_start_time)} · {formatTime(trip.scheduled_start_time)}
+                            </p>
+                          </div>
+                          <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium capitalize
+                            ${trip.status === "active" || trip.status === "IN_PROGRESS"
+                              ? "bg-green-100 text-green-700"
+                              : trip.status === "scheduled"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-gray-100 text-gray-600"}`}>
+                            {trip.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Card>
             </motion.div>
           </div>

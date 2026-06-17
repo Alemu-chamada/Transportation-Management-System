@@ -1,112 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { MainLayout } from "../../routes/MainLayout";
 import { DataTable, Column } from "../../shared/ui/DataTable";
 import { StatusBadge } from "../../shared/ui/StatusBadge";
 import { SearchBar } from "../../shared/ui/SearchBar";
 import { FilterPanel } from "../../shared/ui/FilterPanel";
-import { Eye } from "lucide-react";
+import { Eye, Loader2 } from "lucide-react";
+import { bookingApi } from "../../features/booking/services";
 
-interface Booking {
+interface BookingRow {
   id: string;
   bookingRef: string;
   passenger: string;
   route: string;
   seat: string;
-  paymentStatus: "paid" | "pending" | "failed";
-  bookingStatus: "confirmed" | "pending" | "cancelled";
+  bookingStatus: string;
   date: string;
-  amount: number;
+  fare: string;
 }
 
 export function BookingManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("all");
   const [selectedBookingStatus, setSelectedBookingStatus] = useState("all");
+  const [rows, setRows] = useState<BookingRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const bookings: Booking[] = [
-    {
-      id: "1",
-      bookingRef: "TMS-001-123",
-      passenger: "John Doe",
-      route: "New York → Boston",
-      seat: "12, 13",
-      paymentStatus: "paid",
-      bookingStatus: "confirmed",
-      date: "2026-06-15",
-      amount: 90,
-    },
-    {
-      id: "2",
-      bookingRef: "TMS-002-456",
-      passenger: "Sarah Wilson",
-      route: "Boston → Philadelphia",
-      seat: "8",
-      paymentStatus: "pending",
-      bookingStatus: "pending",
-      date: "2026-06-15",
-      amount: 45,
-    },
-    {
-      id: "3",
-      bookingRef: "TMS-003-789",
-      passenger: "Mike Chen",
-      route: "Philadelphia → New York",
-      seat: "15",
-      paymentStatus: "paid",
-      bookingStatus: "confirmed",
-      date: "2026-06-14",
-      amount: 45,
-    },
-    {
-      id: "4",
-      bookingRef: "TMS-004-012",
-      passenger: "Emma Davis",
-      route: "New York → Washington DC",
-      seat: "5, 6",
-      paymentStatus: "failed",
-      bookingStatus: "cancelled",
-      date: "2026-06-13",
-      amount: 100,
-    },
-  ];
+  useEffect(() => {
+    const loadBookings = async () => {
+      try {
+        const data = await bookingApi.getMyBookings();
+        const bookings = data?.bookings || [];
+        const mapped: BookingRow[] = bookings.map((b: any) => ({
+          id: b.id,
+          bookingRef: b.id.slice(0, 8).toUpperCase(),
+          passenger: b.passenger_id?.slice(0, 8) || "—",
+          route: b.trip ? `${b.trip.origin} → ${b.trip.destination}` : "—",
+          seat: b.seat_number?.toString() || "—",
+          bookingStatus: b.status || "—",
+          date: b.trip?.scheduled_start_time
+            ? new Date(b.trip.scheduled_start_time).toLocaleDateString()
+            : b.created_at
+            ? new Date(b.created_at).toLocaleDateString()
+            : "—",
+          fare: b.trip?.fare != null
+            ? `${b.trip.currency || "ETB"} ${b.trip.fare.toLocaleString()}`
+            : "—",
+        }));
+        setRows(mapped);
+      } catch (error) {
+        console.error("Failed to load bookings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadBookings();
+  }, []);
 
-  const filteredBookings = bookings.filter((booking) => {
+  const filteredRows = rows.filter((row) => {
     const matchesSearch =
-      booking.bookingRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.passenger.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.route.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPayment =
-      selectedPaymentStatus === "all" ||
-      booking.paymentStatus === selectedPaymentStatus;
-    const matchesBooking =
-      selectedBookingStatus === "all" ||
-      booking.bookingStatus === selectedBookingStatus;
-    return matchesSearch && matchesPayment && matchesBooking;
+      row.bookingRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.passenger.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      row.route.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus =
+      selectedBookingStatus === "all" || row.bookingStatus === selectedBookingStatus;
+    return matchesSearch && matchesStatus;
   });
 
-  const columns: Column<Booking>[] = [
+  const columns: Column<BookingRow>[] = [
     { key: "bookingRef", label: "Booking Ref" },
-    { key: "passenger", label: "Passenger" },
+    { key: "passenger", label: "Passenger ID" },
     { key: "route", label: "Route" },
     { key: "date", label: "Date" },
-    { key: "seat", label: "Seat(s)" },
-    {
-      key: "amount",
-      label: "Amount",
-      render: (booking) => (
-        <span className="font-medium text-foreground">${booking.amount}</span>
-      ),
-    },
-    {
-      key: "paymentStatus",
-      label: "Payment",
-      render: (booking) => <StatusBadge status={booking.paymentStatus} />,
-    },
+    { key: "seat", label: "Seat" },
+    { key: "fare", label: "Fare" },
     {
       key: "bookingStatus",
       label: "Status",
-      render: (booking) => <StatusBadge status={booking.bookingStatus} />,
+      render: (row) => <StatusBadge status={row.bookingStatus} />,
     },
     {
       key: "actions",
@@ -130,12 +100,8 @@ export function BookingManagement() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Booking Management
-          </h1>
-          <p className="text-muted-foreground">
-            Monitor and manage all trip bookings
-          </p>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Booking Management</h1>
+          <p className="text-muted-foreground">Monitor and manage all trip bookings</p>
         </motion.div>
 
         <motion.div
@@ -152,24 +118,7 @@ export function BookingManagement() {
               />
             </div>
             <div>
-              <label className="block text-sm text-muted-foreground mb-2">
-                Payment Status
-              </label>
-              <select
-                value={selectedPaymentStatus}
-                onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-                className="px-4 py-3 rounded-xl bg-input-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="all">All</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-muted-foreground mb-2">
-                Booking Status
-              </label>
+              <label className="block text-sm text-muted-foreground mb-2">Booking Status</label>
               <select
                 value={selectedBookingStatus}
                 onChange={(e) => setSelectedBookingStatus(e.target.value)}
@@ -177,8 +126,10 @@ export function BookingManagement() {
               >
                 <option value="all">All</option>
                 <option value="confirmed">Confirmed</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="reserved">Reserved</option>
+                <option value="payment_pending">Payment Pending</option>
+                <option value="failed">Failed</option>
+                <option value="expired">Expired</option>
               </select>
             </div>
           </FilterPanel>
@@ -189,11 +140,17 @@ export function BookingManagement() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <DataTable
-            columns={columns}
-            data={filteredBookings}
-            emptyMessage="No bookings found"
-          />
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={filteredRows}
+              emptyMessage="No bookings found"
+            />
+          )}
         </motion.div>
       </div>
     </MainLayout>

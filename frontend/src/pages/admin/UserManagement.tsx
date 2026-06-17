@@ -89,7 +89,7 @@ export function UserManagement() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      (user.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+      (user.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
       (user.email?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
     const matchesRole = selectedRole === "all" || user.role === selectedRole;
     const matchesStatus =
@@ -100,7 +100,7 @@ export function UserManagement() {
   });
 
   const columns: Column<User>[] = [
-    { key: "name", label: "Name" },
+    { key: "full_name", label: "Name" },
     { key: "email", label: "Email" },
     { key: "phone", label: "Phone" },
     {
@@ -223,6 +223,9 @@ export function UserManagement() {
                 <option value="all">All Roles</option>
                 <option value="passenger">Passenger</option>
                 <option value="driver">Driver</option>
+                <option value="traffic_authority">Traffic Authority</option>
+                <option value="garage_manager">Garage Manager</option>
+                <option value="fuel_station_manager">Fuel Station Manager</option>
                 <option value="system_admin">System Admin</option>
               </select>
             </div>
@@ -262,7 +265,7 @@ export function UserManagement() {
         >
           {selectedUser && (
             <div className="space-y-4">
-              <Input label="Name" value={selectedUser.name} />
+              <Input label="Name" value={selectedUser.full_name} />
               <Input label="Email" value={selectedUser.email} />
               <Input label="Phone" value={selectedUser.phone} />
               <div className="flex gap-3 mt-6">
@@ -287,7 +290,7 @@ export function UserManagement() {
           {selectedUser && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Assign a new role to <strong>{selectedUser.name}</strong>
+                Assign a new role to <strong>{selectedUser.full_name}</strong>
               </p>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
@@ -300,6 +303,9 @@ export function UserManagement() {
                 >
                   <option value="passenger">Passenger</option>
                   <option value="driver">Driver</option>
+                  <option value="traffic_authority">Traffic Authority</option>
+                  <option value="garage_manager">Garage Manager</option>
+                  <option value="fuel_station_manager">Fuel Station Manager</option>
                   <option value="system_admin">System Admin</option>
                 </select>
               </div>

@@ -59,14 +59,20 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/trip" element={<ProtectedRoute><Trip /></ProtectedRoute>} />
-        <Route path="/trips-discovery" element={<ProtectedRoute><TripDiscovery /></ProtectedRoute>} />
-        <Route path="/trip/:id" element={<ProtectedRoute><TripDetails /></ProtectedRoute>} />
-        <Route path="/trip/:id/seats" element={<ProtectedRoute><SeatSelection /></ProtectedRoute>} />
-        <Route path="/trip/:id/booking" element={<ProtectedRoute><BookingFlow /></ProtectedRoute>} />
-        <Route path="/trip/:id/payment" element={<ProtectedRoute><Payment /></ProtectedRoute>} />
-        <Route path="/my-bookings" element={<ProtectedRoute><MyBookings /></ProtectedRoute>} />
+        {/* Passenger-only routes */}
+        <Route path="/trips-discovery" element={<ProtectedRoute allowedRoles={[ROLES.PASSENGER]}><TripDiscovery /></ProtectedRoute>} />
+        <Route path="/trip/:id" element={<ProtectedRoute allowedRoles={[ROLES.PASSENGER]}><TripDetails /></ProtectedRoute>} />
+        <Route path="/trip/:id/seats" element={<ProtectedRoute allowedRoles={[ROLES.PASSENGER]}><SeatSelection /></ProtectedRoute>} />
+        <Route path="/trip/:id/booking" element={<ProtectedRoute allowedRoles={[ROLES.PASSENGER]}><BookingFlow /></ProtectedRoute>} />
+        <Route path="/trip/:id/payment" element={<ProtectedRoute allowedRoles={[ROLES.PASSENGER]}><Payment /></ProtectedRoute>} />
+        <Route path="/my-bookings" element={<ProtectedRoute allowedRoles={[ROLES.PASSENGER]}><MyBookings /></ProtectedRoute>} />
+        {/* Community — all authenticated users */}
         <Route path="/community" element={<ProtectedRoute><PostsAndComments /></ProtectedRoute>} />
+
+        {/* Nearby services — all authenticated users */}
         <Route path="/nearby" element={<ProtectedRoute><NearbyServices /></ProtectedRoute>} />
+
+        {/* Tracking — all authenticated users */}
         <Route path="/tracking" element={<ProtectedRoute><Tracking /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}><UserManagement /></ProtectedRoute>} />
