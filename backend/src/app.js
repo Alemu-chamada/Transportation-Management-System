@@ -8,15 +8,36 @@ const env = require("./config/env.js");
 
 const app = express();
 
-// Configure CORS with environment-based origins
-const allowedOrigins = env.allowedOrigins.split(',').map(origin => origin.trim());
+// Build the list of explicitly allowed origins from the env var
+const explicitOrigins = env.allowedOrigins
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+// Returns true if the request origin is permitted
+const isOriginAllowed = (origin) => {
+  // Always allow requests with no origin (curl, Postman, mobile)
+  if (!origin) return true;
+
+  // 1. Exact match against the ALLOWED_ORIGINS list
+  if (explicitOrigins.includes(origin)) return true;
+
+  // 2. Allow any Vercel preview/production deployment for this project
+  //    Matches: https://*.vercel.app
+  if (/^https:\/\/[a-z0-9-]+(\.vercel\.app)$/.test(origin)) return true;
+
+  // 3. Allow localhost in development
+  if (env.nodeEnv !== "production") {
+    if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return true;
+    if (/^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)) return true;
+  }
+
+  return false;
+};
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
+    if (isOriginAllowed(origin)) {
       callback(null, true);
     } else {
       logger.warn(`CORS blocked request from origin: ${origin}`);
@@ -28,7 +49,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 }));
 
-// Handle preflight requests
+// Handle preflight requests explicitly before any other middleware
 app.options('*', cors());
 
 // Configure Helmet with relaxed CSP for development

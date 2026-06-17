@@ -39,16 +39,22 @@ const authenticateSocket = async (socket, next) => {
 };
 
 const initializeTrackingSocket = (httpServer) => {
-  // Get allowed origins from environment
-  const allowedOrigins = env.allowedOrigins.split(',').map(origin => origin.trim());
-  
+  const explicitOrigins = env.allowedOrigins.split(',').map((o) => o.trim()).filter(Boolean);
+
+  const isOriginAllowed = (origin) => {
+    if (!origin) return true;
+    if (explicitOrigins.includes(origin)) return true;
+    if (/^https:\/\/[a-z0-9-]+(\.vercel\.app)$/.test(origin)) return true;
+    if (env.nodeEnv !== "production") {
+      if (/^http:\/\/localhost(:\d+)?$/.test(origin)) return true;
+    }
+    return false;
+  };
+
   const io = new Server(httpServer, {
     cors: {
       origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, testing tools)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.includes(origin)) {
+        if (isOriginAllowed(origin)) {
           callback(null, true);
         } else {
           logger.warn(`Socket.IO CORS blocked connection from origin: ${origin}`);
