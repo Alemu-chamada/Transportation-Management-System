@@ -1,6 +1,7 @@
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 const env = require("../../config/env.js");
 const logger = require("../utils/logger.js");
+const ApiError = require("../utils/apiError.js");
 
 // Initialize Brevo (formerly Sendinblue) client
 let brevoClient = null;
@@ -160,8 +161,12 @@ const sendOtpEmail = async ({ to, otp }) => {
   }
 
   if (!brevoClient) {
-    logger.error("Brevo client not available. Cannot send OTP email.");
-    throw new Error("Email service is not configured.");
+    logger.error("Brevo client not available. BREVO_API_KEY is missing in environment.");
+    throw new ApiError(
+      503,
+      "Email service is not configured on the server. Please contact support.",
+      "EMAIL_SERVICE_UNAVAILABLE"
+    );
   }
 
   if (!to) {
@@ -216,7 +221,11 @@ const sendOtpEmail = async ({ to, otp }) => {
       errorCode: error.code,
       recipient: to,
     });
-    throw new Error(`Failed to send OTP email: ${error.message}`);
+    throw new ApiError(
+      503,
+      "Failed to send verification email. Please try again later.",
+      "EMAIL_SEND_FAILED"
+    );
   }
 };
 
