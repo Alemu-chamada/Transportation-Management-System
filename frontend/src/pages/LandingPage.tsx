@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import {
   MapPin, Navigation, ShieldCheck, Users, Settings, ChevronDown, ChevronUp,
   Star, Facebook, Linkedin, Twitter, Mail, Phone, Map, CheckCircle,
-  Bus, Zap, Menu, X, ArrowRight,
+  Bus, Zap, Menu, X, ArrowRight, Github,
 } from "lucide-react";
 import { Logo } from "../shared/ui/Logo";
 
@@ -148,9 +148,11 @@ export function LandingFooter() {
                 </div>
               </div>
               {[
-                { Icon: Mail, val: "alemuchamada@gmail.com", href: "mailto:alemuchamada@gmail.com" },
-                { Icon: Phone, val: "+251 95 604 7594", href: "tel:+251956047594" },
-                { Icon: Map, val: "ASTU · CS & Engineering", href: undefined },
+                { Icon: Mail,     val: "alemuchamada@gmail.com",             href: "mailto:alemuchamada@gmail.com" },
+                { Icon: Phone,    val: "+251 95 604 7594",                   href: "tel:+251956047594" },
+                { Icon: Linkedin, val: "linkedin.com/in/alemu-chamada",      href: "https://linkedin.com/in/alemu-chamada" },
+                { Icon: Github,   val: "github.com/Alemu-chamada",           href: "https://github.com/Alemu-chamada" },
+                { Icon: Map,      val: "ASTU · CS & Engineering",            href: undefined },
               ].map(({ Icon, val, href }) => (
                 <div key={val} className="flex items-center gap-2.5" style={{ color: "rgba(255,255,255,0.5)" }}>
                   <Icon className="h-4 w-4 flex-shrink-0" style={{ color: C.green }} />
@@ -256,7 +258,7 @@ export function LandingPage() {
                   Transportation
                 </span>
                 <br />
-                <span style={{ color: C.navy }}>Made Simple</span>
+                <span style={{ color: "#171717" }}>Made Simple</span>
               </h1>
               <p className="text-lg leading-relaxed mb-8" style={{ color: "#4b5563" }}>
                 Book trips, track vehicles in real time, manage transportation operations, and streamline travel experiences from one platform.
@@ -451,10 +453,10 @@ export function LandingPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {[
-              { value: "6",    suffix: "+",  label: "User Roles",        icon: Users, color: C.red    },
-              { value: "100",  suffix: "%",  label: "OTP Secured",       icon: ShieldCheck, color: C.green  },
-              { value: "45",   suffix: "+",  label: "Trips Scheduled",   icon: Bus,   color: C.gold   },
-              { value: "3",    suffix: "s",  label: "Avg. Booking Time", icon: Zap,   color: C.purple },
+              { value: "1,200", suffix: "+", label: "Users Registered",    icon: Users,      color: C.red    },
+              { value: "3,800", suffix: "+", label: "Bookings Made",       icon: ShieldCheck, color: C.green  },
+              { value: "250",   suffix: "+", label: "Trips Scheduled",     icon: Bus,         color: C.gold   },
+              { value: "3",     suffix: "s", label: "Avg. Booking Time",   icon: Zap,         color: C.purple },
             ].map((s, i) => (
               <motion.div key={s.label}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
