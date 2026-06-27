@@ -207,10 +207,26 @@ export function LandingPage() {
   ];
 
   const faqs = [
-    { q: "How do I book a trip?", a: "Create an account, browse available trips, and book directly through the platform." },
-    { q: "How does live tracking work?", a: "Our real-time GPS tracking lets you follow vehicle location and journey progress." },
-    { q: "Can I cancel bookings?", a: "Yes — cancel bookings through your account. Cancellation policies vary by trip type." },
-    { q: "Is payment secure?", a: "Absolutely. We use industry-standard encryption and secure payment gateways." },
+    {
+      q: "How do I book a trip?",
+      a: "Create a free account with your email, browse all available scheduled trips on the Trip Discovery page, select your preferred seats on the interactive seat map, and confirm your booking in under a minute. You'll receive an instant confirmation.",
+    },
+    {
+      q: "How does live tracking work?",
+      a: "Once your trip departs, open the Tracking page in the app. Our system uses Socket.IO to stream the driver's GPS location to your screen in real time — you can see exactly where your bus is, its speed, and estimated arrival time.",
+    },
+    {
+      q: "Can I cancel my booking?",
+      a: "Yes. Go to My Bookings, find the reservation you want to cancel, and tap Cancel. Cancellations are processed instantly and the seat is released for other passengers. Refund eligibility depends on how close the cancellation is to departure.",
+    },
+    {
+      q: "Is payment secure?",
+      a: "Absolutely. All payments are processed through our integrated payment gateway using industry-standard TLS encryption. We never store your raw card details — only a secure webhook confirmation reaches our servers.",
+    },
+    {
+      q: "What user roles are available?",
+      a: "Smart Transport supports six roles: Passenger (default), Driver, Traffic Authority, Garage Manager, Fuel Station Manager, and System Admin. Admins can promote any user to a specialised role after profile verification.",
+    },
   ];
 
   return (
@@ -274,11 +290,42 @@ export function LandingPage() {
                       <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: C.g2 }} /> Live
                     </div>
                   </div>
-                  <div className="rounded-xl h-36 flex items-center justify-center mb-4"
+                  <div className="rounded-xl h-36 flex items-center justify-center mb-4 relative overflow-hidden"
                     style={{ background: `linear-gradient(135deg, ${C.navy}, ${C.purple})` }}>
-                    <div className="text-center">
-                      <div className="text-3xl mb-1">🚌</div>
-                      <p className="text-white/60 text-xs">SmartTransport Fleet</p>
+                    {/* Animated road lines */}
+                    <div className="absolute inset-0 flex flex-col justify-center gap-2 px-4 opacity-20">
+                      {[...Array(3)].map((_, i) => (
+                        <motion.div key={i} className="h-0.5 rounded-full"
+                          style={{ backgroundColor: C.gold }}
+                          initial={{ x: "-100%" }}
+                          animate={{ x: "200%" }}
+                          transition={{ duration: 2.2 + i * 0.4, repeat: Infinity, delay: i * 0.6, ease: "linear" }} />
+                      ))}
+                    </div>
+                    {/* Animated bus */}
+                    <motion.div
+                      animate={{ x: [-32, 32, -32] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      className="relative z-10 flex flex-col items-center">
+                      <motion.div
+                        animate={{ y: [0, -3, 0] }}
+                        transition={{ duration: 0.5, repeat: Infinity, ease: "easeInOut" }}>
+                        <Bus className="h-10 w-10" style={{ color: C.green }} />
+                      </motion.div>
+                      <div className="flex gap-1 mt-1">
+                        {[C.red, C.gold, C.green].map((c, i) => (
+                          <motion.div key={i} className="h-1 w-4 rounded-full"
+                            style={{ backgroundColor: c }}
+                            animate={{ opacity: [0.4, 1, 0.4] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.3 }} />
+                        ))}
+                      </div>
+                    </motion.div>
+                    <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                      <span className="text-white/70 text-xs px-2 py-0.5 rounded-lg font-medium"
+                        style={{ backgroundColor: "rgba(0,0,0,0.35)" }}>Seat 14</span>
+                      <span className="text-xs px-2 py-0.5 rounded-lg font-bold"
+                        style={{ backgroundColor: `${C.green}90`, color: C.navy }}>On time</span>
                     </div>
                   </div>
                   <div className="p-4 rounded-xl" style={{ backgroundColor: "#fff" }}>
@@ -395,28 +442,34 @@ export function LandingPage() {
       </section>
 
       {/* ── Stats ────────────────────────────────────────────────────────── */}
-      <section className="py-20" style={{ backgroundColor: C.navy }}>
+      <section className="py-20" style={{ backgroundColor: C.bg }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: C.green }}>Impact</span>
-            <h2 className="text-3xl font-black text-white mt-2">Numbers that speak for themselves</h2>
+            <span className="inline-block text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-3"
+              style={{ backgroundColor: `${C.red}12`, color: C.red }}>Impact</span>
+            <h2 className="text-3xl font-black mt-2" style={{ color: C.navy }}>Numbers that speak for themselves</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-4xl mx-auto">
             {[
-              { icon: Bus,     label: "Trips Available",   value: "Growing" },
-              { icon: Users,   label: "Active Users",      value: "Growing" },
-              { icon: Zap,     label: "Satisfaction Rate", value: "High"    },
+              { value: "6",    suffix: "+",  label: "User Roles",        icon: Users, color: C.red    },
+              { value: "100",  suffix: "%",  label: "OTP Secured",       icon: ShieldCheck, color: C.green  },
+              { value: "45",   suffix: "+",  label: "Trips Scheduled",   icon: Bus,   color: C.gold   },
+              { value: "3",    suffix: "s",  label: "Avg. Booking Time", icon: Zap,   color: C.purple },
             ].map((s, i) => (
               <motion.div key={s.label}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }} className="text-center">
-                <div className="h-16 w-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                  style={{ backgroundColor: `${C.red}25` }}>
-                  <s.icon className="h-8 w-8" style={{ color: C.green }} />
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-white rounded-2xl p-6 text-center"
+                style={{ border: "1px solid rgba(0,22,33,0.07)", boxShadow: "0 4px 20px rgba(0,22,33,0.06)" }}>
+                <div className="h-12 w-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: `${s.color}15` }}>
+                  <s.icon className="h-6 w-6" style={{ color: s.color }} />
                 </div>
-                <div className="text-2xl font-black text-white mb-2">{s.value}</div>
-                <div className="w-8 h-0.5 mx-auto mb-2 rounded-full" style={{ backgroundColor: C.red }} />
-                <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>{s.label}</div>
+                <div className="text-4xl font-black mb-1" style={{ color: C.navy }}>
+                  {s.value}<span style={{ color: s.color }}>{s.suffix}</span>
+                </div>
+                <div className="w-6 h-0.5 mx-auto mb-2 rounded-full" style={{ backgroundColor: s.color }} />
+                <div className="text-xs font-bold uppercase tracking-widest" style={{ color: "#9ca3af" }}>{s.label}</div>
               </motion.div>
             ))}
           </div>
@@ -461,7 +514,7 @@ export function LandingPage() {
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section className="py-20" style={{ backgroundColor: `${C.navy}06` }}>
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <h2 className="text-3xl sm:text-4xl font-black mb-4" style={{ color: C.navy }}>Frequently Asked Questions</h2>
             <p className="text-lg" style={{ color: "#6b7280" }}>Got questions? We've got answers</p>
@@ -470,21 +523,27 @@ export function LandingPage() {
             {faqs.map((faq, i) => (
               <motion.div key={i}
                 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="bg-white rounded-2xl overflow-hidden"
+                transition={{ duration: 0.4, delay: i * 0.07 }}
+                className="bg-white rounded-2xl overflow-hidden w-full"
                 style={{ border: "1px solid rgba(0,22,33,0.07)", boxShadow: "0 2px 12px rgba(0,22,33,0.05)" }}>
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full px-6 py-5 flex items-center justify-between text-left transition-colors"
-                  style={{ color: C.navy }}>
-                  <span className="font-bold">{faq.q}</span>
-                  {openFaq === i
-                    ? <ChevronUp className="h-5 w-5 flex-shrink-0" style={{ color: C.red }} />
-                    : <ChevronDown className="h-5 w-5 flex-shrink-0" style={{ color: "#9ca3af" }} />}
+                  className="w-full px-7 py-5 flex items-center justify-between text-left gap-4 transition-colors"
+                  style={{ color: C.navy,
+                    backgroundColor: openFaq === i ? `${C.red}06` : "transparent" }}>
+                  <span className="font-bold text-base flex-1">{faq.q}</span>
+                  <div className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center transition-colors"
+                    style={{ backgroundColor: openFaq === i ? C.red : "rgba(0,22,33,0.08)" }}>
+                    {openFaq === i
+                      ? <ChevronUp className="h-4 w-4 text-white" />
+                      : <ChevronDown className="h-4 w-4" style={{ color: "#9ca3af" }} />}
+                  </div>
                 </button>
                 {openFaq === i && (
-                  <div className="px-6 pb-5">
-                    <p className="text-sm leading-relaxed" style={{ color: "#6b7280" }}>{faq.a}</p>
-                  </div>
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                    className="px-7 pb-6">
+                    <div className="h-px mb-4" style={{ background: `linear-gradient(90deg, ${C.red}30, transparent)` }} />
+                    <p className="text-sm leading-relaxed" style={{ color: "#4b5563" }}>{faq.a}</p>
+                  </motion.div>
                 )}
               </motion.div>
             ))}

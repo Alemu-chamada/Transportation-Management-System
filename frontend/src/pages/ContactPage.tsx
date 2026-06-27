@@ -7,8 +7,7 @@ const C = { red: "#FF4103", navy: "#001621", green: "#21F1A8", gold: "#FFBE0B", 
 const SYSTEM_ITEMS = [
   { Icon: Globe,  label: "Platform",     value: "Smart Transport Management System", href: undefined },
   { Icon: Mail,   label: "Support Email",value: "smarttransportserv@gmail.com",      href: "mailto:smarttransportserv@gmail.com" },
-  { Icon: Phone,  label: "Phone",        value: "+251 99 273 8116",                 href: "tel:+251992738116" },
-  { Icon: MapPin, label: "Location",     value: "ASTU · Addis Ababa, Ethiopia",     href: undefined },
+  { Icon: Phone,  label: "Phone",        value: "+251 96 694 2369.",                 href: "tel:+251 96 694 2369." },
 ];
 
 const DEV_ITEMS = [
@@ -16,7 +15,7 @@ const DEV_ITEMS = [
   { Icon: Phone,    label: "Phone",    value: "+251 95 604 7594",               href: "tel:+251956047594" },
   { Icon: Github,   label: "GitHub",   value: "github.com/Alemu-chamada",       href: "https://github.com/Alemu-chamada" },
   { Icon: Linkedin, label: "LinkedIn", value: "Alemu Chamada",                  href: "https://linkedin.com/in/alemu-chamada" },
-  { Icon: MapPin,   label: "Degree",   value: "CS & Engineering · ASTU",        href: undefined },
+  { Icon: MapPin,   label: "Education",   value: "Computer science and Engineering · ASTU",        href: "https://www.astu.edu.et/" },
 ];
 
 export function ContactPage() {
@@ -238,7 +237,8 @@ function DeveloperCard() {
 }
 
 /* ─── Metro Connector ────────────────────────────────────────────────────── */
-// Path: starts top-center, angles right 35°, drops straight, angles left 35°, ends bottom-center
+// Path flows from top (beside System card) → mostly vertical → bottom (beside Dev card)
+// Arrow marker at destination end
 const PATH = "M 100 0 L 100 60 L 140 110 L 140 360 L 100 410 L 100 480";
 
 const NODES = [
@@ -258,11 +258,16 @@ function MetroConnector() {
             <stop offset="100%" stopColor={C.purple} stopOpacity="0.9" />
           </linearGradient>
           <linearGradient id="flow" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stopColor="#fff" stopOpacity="0" />
-            <stop offset="40%"  stopColor={C.red} stopOpacity="0.9" />
-            <stop offset="55%"  stopColor="#fff" stopOpacity="1" />
+            <stop offset="0%"   stopColor="#fff"   stopOpacity="0" />
+            <stop offset="40%"  stopColor={C.red}  stopOpacity="0.9" />
+            <stop offset="55%"  stopColor="#fff"   stopOpacity="1" />
             <stop offset="100%" stopColor={C.purple} stopOpacity="0" />
           </linearGradient>
+          {/* Arrowhead marker pointing downward */}
+          <marker id="arrow" markerWidth="10" markerHeight="8" refX="5" refY="4"
+            orient="auto" markerUnits="userSpaceOnUse">
+            <path d="M 0 0 L 10 4 L 0 8 Z" fill={C.purple} opacity="0.9" />
+          </marker>
           <filter id="glow">
             <feGaussianBlur stdDeviation="3.5" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
@@ -276,9 +281,10 @@ function MetroConnector() {
         {/* Soft background glow track */}
         <path d={PATH} stroke="url(#cg)" strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" opacity={0.1} />
 
-        {/* Dashed segmented line */}
+        {/* Dashed segmented line with arrowhead at end */}
         <path d={PATH} stroke="url(#cg)" strokeWidth={1.5} strokeLinecap="round"
-          strokeLinejoin="round" strokeDasharray="7 7" opacity={0.55} filter="url(#glow)" />
+          strokeLinejoin="round" strokeDasharray="7 7" opacity={0.55} filter="url(#glow)"
+          markerEnd="url(#arrow)" />
 
         {/* Solid bright line */}
         <path d={PATH} stroke="url(#cg)" strokeWidth={2.5} strokeLinecap="round"
@@ -291,7 +297,7 @@ function MetroConnector() {
           transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
           filter="url(#sg)" opacity={0.85} />
 
-        {/* Nodes */}
+        {/* Intermediate nodes */}
         {NODES.map(({ y }, i) => (
           <g key={i}>
             <motion.circle cx={140} cy={y} r={13}
@@ -304,20 +310,28 @@ function MetroConnector() {
           </g>
         ))}
 
-        {/* Origin dot */}
-        <circle cx={100} cy={0} r={5} fill={C.red} filter="url(#glow)" />
-        <motion.circle cx={100} cy={0} r={5} fill="none" stroke={C.red} strokeWidth={1.2}
-          animate={{ r: [5, 14], opacity: [0.7, 0] }}
-          transition={{ duration: 1.6, repeat: Infinity }} />
+        {/* ── Origin dot — top, beside System card (pulsing red = departure) */}
+        <circle cx={100} cy={0} r={6} fill={C.red} filter="url(#glow)" />
+        <motion.circle cx={100} cy={0} r={6} fill="none" stroke={C.red} strokeWidth={1.5}
+          animate={{ r: [6, 18], opacity: [0.8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }} />
+        {/* "FROM" label */}
+        <text x={88} y={-12} textAnchor="middle" fontSize="9" fontWeight="700"
+          fill={C.red} letterSpacing="1" opacity="0.7">FROM</text>
 
-        {/* Destination dot */}
-        <circle cx={100} cy={480} r={5} fill={C.purple} filter="url(#glow)" />
-        <motion.circle cx={100} cy={480} r={5} fill="none" stroke={C.purple} strokeWidth={1.2}
-          animate={{ r: [5, 14], opacity: [0.7, 0] }}
-          transition={{ duration: 1.6, repeat: Infinity, delay: 0.8 }} />
+        {/* ── Destination dot — bottom, beside Developer card (arrowhead + pulse purple) */}
+        <circle cx={100} cy={480} r={6} fill={C.purple} filter="url(#glow)" />
+        <motion.circle cx={100} cy={480} r={6} fill="none" stroke={C.purple} strokeWidth={1.5}
+          animate={{ r: [6, 18], opacity: [0.8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, delay: 0.75 }} />
+        {/* Triangle arrowhead pointing down into destination */}
+        <polygon points="94,472 100,482 106,472" fill={C.purple} opacity="0.85" />
+        {/* "TO" label */}
+        <text x={100} y={496} textAnchor="middle" fontSize="9" fontWeight="700"
+          fill={C.purple} letterSpacing="1" opacity="0.7">TO</text>
       </svg>
 
-      {/* Icon labels beside nodes */}
+      {/* Icon labels beside intermediate nodes */}
       {NODES.map(({ y, Icon, label }) => (
         <div key={label} style={{ position: "absolute", top: y - 11, left: 162,
           display: "flex", alignItems: "center", gap: 6 }}>

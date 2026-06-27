@@ -15,7 +15,7 @@ export function Logo({ variant = "dark", size = "md" }: LogoProps) {
     <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
       <div
         className={`${iconSize} rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all flex-shrink-0`}
-        style={{ background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }}
+        style={{ background: "linear-gradient(135deg, #FF4103 0%, #FFBE0B 100%)" }}
       >
         <span className="text-white font-black text-sm leading-none select-none tracking-tight">ST</span>
       </div>
