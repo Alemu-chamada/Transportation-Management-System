@@ -23,10 +23,11 @@ export function TripDiscovery() {
     try {
       setLoading(true);
       const data = await tripApi.getScheduledTrips();
-      // Only show scheduled trips (created by admin)
-      if (data?.trips) setTrips(data.trips.filter((t: Trip) => t.status === 'scheduled'));
+      // Backend returns only admin-created scheduled trips
+      setTrips(data?.trips ?? []);
     } catch (error) {
       console.error('Failed to load trips:', error);
+      setTrips([]);
     } finally {
       setLoading(false);
     }
@@ -36,10 +37,11 @@ export function TripDiscovery() {
     try {
       setLoading(true);
       const data = await tripApi.getNearbyTrips({ origin: searchFrom, destination: searchTo });
-      // Only show scheduled trips (created by admin)
-      if (data?.trips) setTrips(data.trips.filter((t: Trip) => t.status === 'scheduled'));
+      // Backend returns only admin-created scheduled trips matching the route
+      setTrips(data?.trips ?? []);
     } catch (error) {
       console.error('Failed to search trips:', error);
+      setTrips([]);
     } finally {
       setLoading(false);
     }
@@ -132,7 +134,11 @@ export function TripDiscovery() {
                 <MapPin className="h-10 w-10 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-2">No trips available</h3>
-              <p className="text-muted-foreground text-sm">Try adjusting your search or check back later for available trips.</p>
+              <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                {searchFrom || searchTo
+                  ? "No trips found for this route. Try different origin or destination."
+                  : "No scheduled trips are available at the moment. Please check back later."}
+              </p>
             </Card>
           ) : (
             trips.map((trip, index) => (

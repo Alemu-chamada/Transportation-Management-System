@@ -5,17 +5,17 @@ import { LandingNav, LandingFooter } from "./LandingPage";
 const C = { red: "#FF4103", navy: "#001621", green: "#21F1A8", gold: "#FFBE0B", purple: "#3C1A47", g2: "#59C749" };
 
 const SYSTEM_ITEMS = [
-  { Icon: Globe,  label: "Platform",     value: "Smart Transport Management System", href: undefined },
-  { Icon: Mail,   label: "Support Email",value: "smarttransportserv@gmail.com",      href: "mailto:smarttransportserv@gmail.com" },
-  { Icon: Phone,  label: "Phone",        value: "+251 96 694 2369.",                 href: "tel:+251 96 694 2369." },
+  { Icon: Globe,  label: "Platform",      value: "Smart Transport Management System", href: undefined },
+  { Icon: Mail,   label: "Support Email", value: "smarttransportserv@gmail.com",      href: "mailto:smarttransportserv@gmail.com" },
+  { Icon: Phone,  label: "Phone",         value: "+251 96 694 2369",                  href: "tel:+251966942369" },
 ];
 
 const DEV_ITEMS = [
-  { Icon: Mail,     label: "Email",    value: "alemuchamada@gmail.com",         href: "mailto:alemuchamada@gmail.com" },
-  { Icon: Phone,    label: "Phone",    value: "+251 95 604 7594",               href: "tel:+251956047594" },
-  { Icon: Github,   label: "GitHub",   value: "github.com/Alemu-chamada",       href: "https://github.com/Alemu-chamada" },
-  { Icon: Linkedin, label: "LinkedIn", value: "Alemu Chamada",                  href: "https://linkedin.com/in/alemu-chamada" },
-  { Icon: MapPin,   label: "Education",   value: "Computer science and Engineering · ASTU",        href: "https://www.astu.edu.et/" },
+  { Icon: Mail,     label: "Email",     value: "alemuchamada@gmail.com",          href: "mailto:alemuchamada@gmail.com" },
+  { Icon: Phone,    label: "Phone",     value: "+251 95 604 7594",                href: "tel:+251956047594" },
+  { Icon: Github,   label: "GitHub",    value: "github.com/Alemu-chamada",        href: "https://github.com/Alemu-chamada" },
+  { Icon: Linkedin, label: "LinkedIn",  value: "Alemu Chamada",                   href: "https://linkedin.com/in/alemu-chamada" },
+  { Icon: MapPin,   label: "Education", value: "Computer Science & Eng · ASTU",   href: "https://www.astu.edu.et/" },
 ];
 
 export function ContactPage() {
@@ -26,10 +26,8 @@ export function ContactPage() {
       {/* Hero */}
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-10"
-            style={{ backgroundColor: C.red }} />
-          <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-3xl opacity-10"
-            style={{ backgroundColor: C.green }} />
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-10" style={{ backgroundColor: C.red }} />
+          <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full blur-3xl opacity-10" style={{ backgroundColor: C.green }} />
         </div>
         <div className="w-full max-w-4xl mx-auto px-6 sm:px-10 text-center relative z-10">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
@@ -49,36 +47,49 @@ export function ContactPage() {
         </div>
       </section>
 
-      {/* ── Contact Cards ────────────────────────────────────────────────── */}
-      <section className="py-12 pb-28">
-        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-24">
+      {/* ── Contact Cards — side-by-side with metro connector ─────────── */}
+      <section className="py-8 pb-24">
+        <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20">
 
-          {/* ── DESKTOP: vertical composition, slight offset ──────────── */}
-          <div className="hidden md:block relative" style={{ minHeight: 780 }}>
+          {/* ── DESKTOP ─────────────────────────────────────────────────── */}
+          <div className="hidden lg:flex items-start gap-0" style={{ minHeight: 520 }}>
 
-            {/* System card — top, left-of-center */}
-            <motion.div className="absolute top-0"
-              style={{ left: "50%", marginLeft: "-340px", width: "360px" }}
-              initial={{ opacity: 0, y: -24 }} whileInView={{ opacity: 1, y: 0 }}
+            {/* System card */}
+            <motion.div className="flex-shrink-0" style={{ width: 380 }}
+              initial={{ opacity: 0, x: -32 }} whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.65 }}>
               <SystemCard />
             </motion.div>
 
-            {/* SVG connector — full overlay */}
-            <div className="absolute inset-0 pointer-events-none">
-              <ConnectorSVG />
+            {/* Metro connector — fixed width, stretches between the cards */}
+            <div className="flex-1 self-stretch relative" style={{ minWidth: 160 }}>
+              <RouteConnector />
             </div>
 
-            {/* Developer card — bottom, right-of-center */}
-            <motion.div className="absolute bottom-0"
-              style={{ left: "50%", marginLeft: "-20px", width: "360px" }}
-              initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ duration: 0.65, delay: 0.2 }}>
+            {/* Developer card */}
+            <motion.div className="flex-shrink-0" style={{ width: 380 }}
+              initial={{ opacity: 0, x: 32 }} whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.65, delay: 0.15 }}>
               <DeveloperCard />
             </motion.div>
           </div>
 
-          {/* ── MOBILE: stacked ──────────────────────────────────────── */}
+          {/* ── TABLET (md) ─────────────────────────────────────────────── */}
+          <div className="hidden md:flex lg:hidden items-start gap-6">
+            <motion.div className="flex-1" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.6 }}>
+              <SystemCard />
+            </motion.div>
+            <div className="flex items-center self-stretch pt-20">
+              <div className="w-px h-full" style={{ background: `linear-gradient(to bottom, ${C.red}, ${C.purple})`, minHeight: 200 }} />
+            </div>
+            <motion.div className="flex-1" initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.15 }}>
+              <DeveloperCard />
+            </motion.div>
+          </div>
+
+          {/* ── MOBILE ──────────────────────────────────────────────────── */}
           <div className="md:hidden flex flex-col gap-6">
             <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.5 }}>
@@ -94,6 +105,7 @@ export function ContactPage() {
               <DeveloperCard />
             </motion.div>
           </div>
+
         </div>
       </section>
 
@@ -137,8 +149,7 @@ export function ContactPage() {
 /* ─── System Card ────────────────────────────────────────────────────────── */
 function SystemCard() {
   return (
-    <motion.div
-      whileHover={{ y: -4, boxShadow: `0 20px 48px rgba(0,22,33,0.14)` }}
+    <motion.div whileHover={{ y: -4, boxShadow: `0 20px 48px rgba(0,22,33,0.14)` }}
       className="bg-white rounded-3xl overflow-hidden transition-all duration-300"
       style={{ border: "1px solid rgba(0,22,33,0.08)", boxShadow: "0 4px 24px rgba(0,22,33,0.08)" }}>
       <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${C.red}, ${C.gold})` }} />
@@ -185,8 +196,7 @@ function SystemCard() {
 /* ─── Developer Card ─────────────────────────────────────────────────────── */
 function DeveloperCard() {
   return (
-    <motion.div
-      whileHover={{ y: -4, boxShadow: `0 20px 48px rgba(0,22,33,0.14)` }}
+    <motion.div whileHover={{ y: -4, boxShadow: `0 20px 48px rgba(0,22,33,0.14)` }}
       className="bg-white rounded-3xl overflow-hidden transition-all duration-300"
       style={{ border: "1px solid rgba(0,22,33,0.08)", boxShadow: "0 4px 24px rgba(0,22,33,0.08)" }}>
       <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${C.purple}, ${C.green})` }} />
@@ -219,8 +229,7 @@ function DeveloperCard() {
               <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: "#9ca3af" }}>{label}</p>
                 {href
-                  ? <a href={href} target={href.startsWith("http") ? "_blank" : undefined}
-                      rel="noopener noreferrer"
+                  ? <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
                       className="text-sm font-semibold break-all inline-flex items-center gap-1 hover:underline"
                       style={{ color: C.navy }}>
                       {value}
@@ -236,114 +245,145 @@ function DeveloperCard() {
   );
 }
 
-/* ─── ConnectorSVG ───────────────────────────────────────────────────────── */
-/*
- * viewBox: 1000 × 780
- *
- * Card positions (container ~full width, cards fixed at px offsets from 50%):
- *   System card : left = 50% - 340px, width = 360px
- *                 → right edge ≈ x = 520  (500 - 340 + 360)
- *                 → mid-height of card ≈ y = 140
- *
- *   Dev card    : left = 50% - 20px,  width = 360px
- *                 → left edge ≈ x = 480  (500 - 20)
- *                 → mid-height from bottom ≈ y = 638
- *
- * Route: start at System card right edge → arc right → drop straight down → arc left → end at Dev card left edge
- * Path: M 520 140 H 620 C 660 140 660 175 660 220 V 560 C 660 605 640 638 600 638 H 480
- */
-const CPATH = "M 520 140 H 620 C 660 140 660 175 660 220 V 560 C 660 605 640 638 600 638 H 480";
+/* ─── Route Connector ────────────────────────────────────────────────────── */
+// Sits in a flex-1 container between the two cards.
+// Uses a 100%×100% SVG with a path that:
+//   - Starts at the LEFT edge of the SVG (= right edge of System card)
+//   - Goes horizontally to center, turns 90° downward, turns 90° right to RIGHT edge (= left edge of Dev card)
+// viewBox height is fixed at 460 to match approximate card height.
+// preserveAspectRatio="none" lets it stretch horizontally.
+function RouteConnector() {
+  // Path in a 200×460 viewBox (height matches card height ~460px)
+  // Start: left center  (0, 140)  — mid-height of System card header area
+  // Turn down at x=100 (center of connector)
+  // End: right at       (200, 320) — mid-height of Developer card header area
+  const W = 200;
+  const H = 460;
+  const START_Y = 140;
+  const END_Y = 320;
+  const MID_X = 100;
+  // Path: horizontal right → vertical down → horizontal right
+  // Sharp-right-then-down route with smooth bezier corners
+  const PATH = `M 0 ${START_Y} H ${MID_X - 20} C ${MID_X} ${START_Y} ${MID_X} ${START_Y + 30} ${MID_X} ${START_Y + 60} V ${END_Y - 30} C ${MID_X} ${END_Y} ${MID_X + 20} ${END_Y} ${MID_X + 40} ${END_Y} H ${W}`;
 
-const CNODES = [
-  { x: 660, y: 280, Icon: MapPin,     label: "Station"  },
-  { x: 660, y: 390, Icon: Bus,        label: "En Route" },
-  { x: 660, y: 500, Icon: Navigation, label: "Arrive"   },
-];
+  const nodes = [
+    { y: START_Y + 80,                         Icon: MapPin,     label: "Depart"   },
+    { y: Math.round((START_Y + END_Y) / 2),    Icon: Bus,        label: "En Route" },
+    { y: END_Y - 60,                            Icon: Navigation, label: "Arrive"   },
+  ];
 
-function ConnectorSVG() {
   return (
-    <svg
-      width="100%" height="100%"
-      viewBox="0 0 1000 780"
-      preserveAspectRatio="xMidYMid meet"
-      fill="none"
-      style={{ position: "absolute", inset: 0 }}
-    >
-      <defs>
-        <linearGradient id="cg2" x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0%"   stopColor={C.red}    stopOpacity="0.95" />
-          <stop offset="50%"  stopColor={C.gold}   stopOpacity="0.9"  />
-          <stop offset="100%" stopColor={C.purple} stopOpacity="0.95" />
-        </linearGradient>
-        <linearGradient id="cf2" x1="0" y1="0" x2="0.3" y2="1">
-          <stop offset="0%"   stopColor="#fff"     stopOpacity="0"   />
-          <stop offset="40%"  stopColor={C.red}    stopOpacity="1"   />
-          <stop offset="55%"  stopColor="#fff"     stopOpacity="1"   />
-          <stop offset="100%" stopColor={C.purple} stopOpacity="0"   />
-        </linearGradient>
-        <filter id="glow2" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="5" result="b" />
-          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-        <filter id="sglow2" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="9" result="b" />
-          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
+    <div className="absolute inset-0" style={{ minHeight: H }}>
+      <svg width="100%" height="100%"
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        fill="none">
+        <defs>
+          <linearGradient id="rcg" x1="0" y1="0" x2="1" y2="0.7">
+            <stop offset="0%"   stopColor={C.red}    stopOpacity="0.95" />
+            <stop offset="50%"  stopColor={C.gold}   stopOpacity="0.9"  />
+            <stop offset="100%" stopColor={C.purple} stopOpacity="0.95" />
+          </linearGradient>
+          <linearGradient id="rflow" x1="0" y1="0" x2="1" y2="0.7">
+            <stop offset="0%"   stopColor="#fff"     stopOpacity="0"   />
+            <stop offset="40%"  stopColor={C.red}    stopOpacity="1"   />
+            <stop offset="55%"  stopColor="#fff"     stopOpacity="1"   />
+            <stop offset="100%" stopColor={C.purple} stopOpacity="0"   />
+          </linearGradient>
+          <filter id="rglow">
+            <feGaussianBlur stdDeviation="3" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="rsglow">
+            <feGaussianBlur stdDeviation="6" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
 
-      {/* Wide glow halo */}
-      <path d={CPATH} stroke="url(#cg2)" strokeWidth={20} fill="none"
-        strokeLinecap="round" strokeLinejoin="round" opacity={0.1} />
+        {/* Glow halo */}
+        <path d={PATH} stroke="url(#rcg)" strokeWidth={14} fill="none"
+          strokeLinecap="round" strokeLinejoin="round" opacity={0.1} />
 
-      {/* Dashed track */}
-      <path d={CPATH} stroke="url(#cg2)" strokeWidth={2}
-        strokeLinecap="round" strokeLinejoin="round"
-        strokeDasharray="12 8" opacity={0.55} filter="url(#glow2)" fill="none" />
+        {/* Dashed track */}
+        <path d={PATH} stroke="url(#rcg)" strokeWidth={2} fill="none"
+          strokeLinecap="round" strokeLinejoin="round"
+          strokeDasharray="10 7" opacity={0.6} filter="url(#rglow)" />
 
-      {/* Solid bright line */}
-      <path d={CPATH} stroke="url(#cg2)" strokeWidth={3}
-        strokeLinecap="round" strokeLinejoin="round"
-        opacity={0.9} filter="url(#glow2)" fill="none" />
+        {/* Solid line */}
+        <path d={PATH} stroke="url(#rcg)" strokeWidth={2.5} fill="none"
+          strokeLinecap="round" strokeLinejoin="round"
+          opacity={0.9} filter="url(#rglow)" />
 
-      {/* Animated particle */}
-      <motion.path
-        d={CPATH} stroke="url(#cf2)" strokeWidth={7}
-        strokeLinecap="round" fill="none"
-        initial={{ pathOffset: 0 }}
-        animate={{ pathOffset: [0, 1] }}
-        transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
-        filter="url(#sglow2)" opacity={0.95}
-      />
+        {/* Animated particle */}
+        <motion.path d={PATH} stroke="url(#rflow)" strokeWidth={5} fill="none"
+          strokeLinecap="round"
+          initial={{ pathOffset: 0 }}
+          animate={{ pathOffset: [0, 1] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
+          filter="url(#rsglow)" opacity={0.95} />
 
-      {/* Station nodes */}
-      {CNODES.map(({ x, y }, i) => (
-        <g key={i}>
-          <motion.circle cx={x} cy={y} r={18} fill="none"
-            stroke={C.red} strokeWidth={1.5}
-            animate={{ r: [11, 26], opacity: [0.65, 0] }}
-            transition={{ duration: 1.9, repeat: Infinity, delay: i * 0.65 }} />
-          <circle cx={x} cy={y} r={11} fill="#FFF9FA"
-            stroke="url(#cg2)" strokeWidth={2} filter="url(#glow2)" />
-          <circle cx={x} cy={y} r={4.5} fill="url(#cg2)" opacity={0.95} />
-        </g>
-      ))}
+        {/* Station nodes along the path */}
+        {nodes.map(({ y }, i) => (
+          <g key={i}>
+            <motion.circle cx={MID_X} cy={y} r={10} fill="none"
+              stroke={C.red} strokeWidth={1.2}
+              animate={{ r: [7, 18], opacity: [0.65, 0] }}
+              transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.65 }} />
+            <circle cx={MID_X} cy={y} r={7} fill="#FFF9FA"
+              stroke="url(#rcg)" strokeWidth={1.5} filter="url(#rglow)" />
+            <circle cx={MID_X} cy={y} r={3} fill="url(#rcg)" opacity={0.95} />
+          </g>
+        ))}
 
-      {/* Origin dot — right edge of System card */}
-      <circle cx={520} cy={140} r={8} fill={C.red} filter="url(#glow2)" />
-      <motion.circle cx={520} cy={140} r={8} fill="none"
-        stroke={C.red} strokeWidth={2}
-        animate={{ r: [8, 22], opacity: [0.85, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity }} />
+        {/* Origin dot — left edge (System card right) */}
+        <circle cx={0} cy={START_Y} r={7} fill={C.red} filter="url(#rglow)" />
+        <motion.circle cx={0} cy={START_Y} r={7} fill="none" stroke={C.red} strokeWidth={1.5}
+          animate={{ r: [7, 18], opacity: [0.85, 0] }}
+          transition={{ duration: 1.4, repeat: Infinity }} />
 
-      {/* Destination dot + arrowhead — left edge of Developer card */}
-      <polygon points="465,625 480,638 465,651" fill={C.purple} opacity={0.9} />
-      <circle cx={480} cy={638} r={8} fill={C.purple} filter="url(#glow2)" />
-      <motion.circle cx={480} cy={638} r={8} fill="none"
-        stroke={C.purple} strokeWidth={2}
-        animate={{ r: [8, 22], opacity: [0.85, 0] }}
-        transition={{ duration: 1.5, repeat: Infinity, delay: 0.75 }} />
-    </svg>
+        {/* Destination arrowhead + dot — right edge (Developer card left) */}
+        <polygon points={`${W - 12},${END_Y - 7} ${W},${END_Y} ${W - 12},${END_Y + 7}`}
+          fill={C.purple} opacity={0.95} />
+        <circle cx={W} cy={END_Y} r={7} fill={C.purple} filter="url(#rglow)" />
+        <motion.circle cx={W} cy={END_Y} r={7} fill="none" stroke={C.purple} strokeWidth={1.5}
+          animate={{ r: [7, 18], opacity: [0.85, 0] }}
+          transition={{ duration: 1.4, repeat: Infinity, delay: 0.7 }} />
+      </svg>
+
+      {/* Station labels rendered in HTML (inside the connector) */}
+      {nodes.map(({ y, Icon, label }, i) => {
+        // Convert viewBox y to % of container height for positioning
+        const topPct = (y / H) * 100;
+        return (
+          <div key={i} style={{
+            position: "absolute",
+            top: `${topPct}%`,
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            pointerEvents: "none",
+          }}>
+            <div style={{
+              marginTop: 28,
+              display: "flex", alignItems: "center", gap: 4,
+            }}>
+              <div style={{ width: 20, height: 20, borderRadius: 6, display: "flex",
+                alignItems: "center", justifyContent: "center",
+                backgroundColor: `${C.red}15`, border: `1px solid ${C.red}28` }}>
+                <Icon style={{ width: 10, height: 10, color: C.red }} />
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 700, color: "rgba(0,22,33,0.35)",
+                letterSpacing: "0.08em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                {label}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
+/* Legacy stubs */
+function ConnectorSVG() { return null; }
 function VerticalConnector() { return null; }
