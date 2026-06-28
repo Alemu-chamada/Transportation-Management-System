@@ -3,16 +3,7 @@ const ApiError = require("../../../shared/utils/apiError.js");
 const { mapTrip, mapBus } = require("../repositories/trip.model.js");
 const userService = require("../../user/services/user.service.js");
 
-const validateTripPayload = ({ bus_id, driver_id, route_description, origin, destination, scheduled_start_time, total_capacity }) => {
-  if (!bus_id) {
-    throw new ApiError(422, "Bus ID is required.", "VALIDATION_ERROR");
-  }
-  if (!driver_id) {
-    throw new ApiError(422, "Driver ID is required.", "VALIDATION_ERROR");
-  }
-  if (!route_description) {
-    throw new ApiError(422, "Route description is required.", "VALIDATION_ERROR");
-  }
+const validateTripPayload = ({ origin, destination, scheduled_start_time, total_capacity }) => {
   if (!origin) {
     throw new ApiError(422, "Origin is required.", "VALIDATION_ERROR");
   }
@@ -39,14 +30,19 @@ const createTrip = async ({ actor, payload }) => {
   validateTripPayload(payload);
 
   return db.transaction(async (client) => {
-    const bus = await getBusById(payload.bus_id, client);
-    if (!bus || !bus.is_active) {
-      throw new ApiError(422, "Bus not found or inactive.", "BUS_NOT_FOUND");
+    // bus_id and driver_id are optional — only validate if provided
+    if (payload.bus_id) {
+      const bus = await getBusById(payload.bus_id, client);
+      if (!bus || !bus.is_active) {
+        throw new ApiError(422, "Bus not found or inactive.", "BUS_NOT_FOUND");
+      }
     }
 
-    const driver = await userService.findById(payload.driver_id, client);
-    if (!driver) {
-      throw new ApiError(422, "Driver not found.", "DRIVER_NOT_FOUND");
+    if (payload.driver_id) {
+      const driver = await userService.findById(payload.driver_id, client);
+      if (!driver) {
+        throw new ApiError(422, "Driver not found.", "DRIVER_NOT_FOUND");
+      }
     }
 
     const tripResult = await client.query(
@@ -56,9 +52,9 @@ const createTrip = async ({ actor, payload }) => {
       RETURNING *
       `,
       [
-        payload.bus_id,
-        payload.driver_id,
-        payload.route_description,
+        payload.bus_id || null,
+        payload.driver_id || null,
+        payload.route_description || `${payload.origin} → ${payload.destination}`,
         payload.origin,
         payload.destination,
         payload.fare || 0,

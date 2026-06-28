@@ -13,6 +13,7 @@ router.get("/buses", adminController.getBuses);
 router.post("/buses", adminController.createBus);
 router.get("/drivers", adminController.getDrivers);
 router.get("/users", adminController.getUsers);
+router.get("/bookings", adminController.getAllBookings);
 
 router.patch(
   "/users/:id/role",

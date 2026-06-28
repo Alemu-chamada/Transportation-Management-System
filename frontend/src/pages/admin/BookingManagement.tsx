@@ -6,7 +6,7 @@ import { StatusBadge } from "../../shared/ui/StatusBadge";
 import { SearchBar } from "../../shared/ui/SearchBar";
 import { FilterPanel } from "../../shared/ui/FilterPanel";
 import { Eye, Loader2 } from "lucide-react";
-import { bookingApi } from "../../features/booking/services";
+import { adminApi } from "../../features/admin/services";
 
 interface BookingRow {
   id: string;
@@ -28,12 +28,12 @@ export function BookingManagement() {
   useEffect(() => {
     const loadBookings = async () => {
       try {
-        const data = await bookingApi.getMyBookings();
+        const data = await adminApi.getAllBookings();
         const bookings = data?.bookings || [];
         const mapped: BookingRow[] = bookings.map((b: any) => ({
           id: b.id,
           bookingRef: b.id.slice(0, 8).toUpperCase(),
-          passenger: b.passenger_id?.slice(0, 8) || "—",
+          passenger: b.passenger_name || b.passenger_email || b.passenger_id?.slice(0, 8) || "—",
           route: b.trip ? `${b.trip.origin} → ${b.trip.destination}` : "—",
           seat: b.seat_number?.toString() || "—",
           bookingStatus: b.status || "—",

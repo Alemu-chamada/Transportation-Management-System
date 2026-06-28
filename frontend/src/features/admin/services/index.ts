@@ -95,4 +95,14 @@ export const adminApi = {
     if (!response?.data?.data) throw new Error('Invalid response from server');
     return response.data.data;
   },
+
+  getAllBookings: async (params?: { status?: string; page?: number; limit?: number }) => {
+    const response = await apiService.get<{
+      success: boolean;
+      message: string;
+      data: { bookings: any[] };
+    }>('/admin/bookings', params);
+    if (!response?.data?.data) throw new Error('Invalid response from server');
+    return response.data.data;
+  },
 };

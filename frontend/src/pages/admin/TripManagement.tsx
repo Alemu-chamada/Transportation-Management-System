@@ -81,8 +81,6 @@ export function TripManagement() {
   };
 
   const validateForm = () => {
-    if (!formData.bus_id) return "Please select a bus.";
-    if (!formData.driver_id) return "Please select a driver.";
     if (!formData.origin.trim()) return "Origin is required.";
     if (!formData.destination.trim()) return "Destination is required.";
     if (!formData.scheduled_start_time) return "Departure time is required.";
@@ -251,14 +249,14 @@ export function TripManagement() {
               </div>
             )}
 
-            {/* Bus selector */}
+            {/* Bus selector — optional */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
-                <Bus className="h-4 w-4" /> Bus
+                <Bus className="h-4 w-4" /> Bus <span className="text-muted-foreground font-normal">(optional)</span>
               </label>
               {buses.length === 0 ? (
                 <div className="p-3 bg-muted rounded-xl text-sm text-muted-foreground">
-                  No active buses found. Add buses to the system first.
+                  No buses found — you can still create a trip without one.
                 </div>
               ) : (
                 <select
@@ -266,7 +264,7 @@ export function TripManagement() {
                   onChange={(e) => handleFormChange("bus_id", e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-input-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="">Select a bus…</option>
+                  <option value="">Select a bus… (optional)</option>
                   {buses.map((bus) => (
                     <option key={bus.id} value={bus.id}>
                       {bus.plate_number} — {bus.capacity} seats
@@ -276,14 +274,14 @@ export function TripManagement() {
               )}
             </div>
 
-            {/* Driver selector */}
+            {/* Driver selector — optional */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
-                <User className="h-4 w-4" /> Driver
+                <User className="h-4 w-4" /> Driver <span className="text-muted-foreground font-normal">(optional)</span>
               </label>
               {drivers.length === 0 ? (
                 <div className="p-3 bg-muted rounded-xl text-sm text-muted-foreground">
-                  No active drivers found. Assign the driver role to a user first.
+                  No drivers found — you can still create a trip without one.
                 </div>
               ) : (
                 <select
@@ -291,7 +289,7 @@ export function TripManagement() {
                   onChange={(e) => handleFormChange("driver_id", e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-input-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
-                  <option value="">Select a driver…</option>
+                  <option value="">Select a driver… (optional)</option>
                   {drivers.map((driver) => (
                     <option key={driver.id} value={driver.id}>
                       {driver.full_name} {driver.phone ? `(${driver.phone})` : ""}
@@ -364,7 +362,6 @@ export function TripManagement() {
                 className="flex-1"
                 onClick={handleCreateTrip}
                 loading={loading}
-                disabled={buses.length === 0 || drivers.length === 0}
               >
                 Create Trip
               </Button>

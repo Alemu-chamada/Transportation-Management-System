@@ -9,6 +9,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Socket.IO client — loaded globally so Tracking.tsx can use window.io -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

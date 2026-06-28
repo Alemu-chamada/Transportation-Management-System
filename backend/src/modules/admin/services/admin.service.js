@@ -191,6 +191,35 @@ const getUsers = async ({ page = 1, limit = 50, role, search } = {}) => {
   };
 };
 
+const getAllBookings = async ({ status, page = 1, limit = 100 } = {}) => {
+  const params = [];
+  const conditions = [];
+
+  if (status && status !== 'all') {
+    params.push(status);
+    conditions.push(`b.status = $${params.length}`);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  params.push(limit);
+  params.push((page - 1) * limit);
+
+  const result = await db.query(
+    `SELECT b.*,
+            to_jsonb(t.*) AS trip,
+            u.full_name AS passenger_name,
+            u.email    AS passenger_email
+     FROM bookings b
+     JOIN trips t ON t.id = b.trip_id
+     JOIN users u ON u.id = b.passenger_id
+     ${where}
+     ORDER BY b.created_at DESC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
+  return result.rows;
+};
+
 module.exports = {
   assignUserRole,
   getMetrics,
@@ -200,4 +229,5 @@ module.exports = {
   createBus,
   getDrivers,
   getUsers,
+  getAllBookings,
 };

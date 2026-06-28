@@ -74,6 +74,14 @@ const getUsers = asyncHandler(async (req, res) => {
   });
 });
 
+const getAllBookings = asyncHandler(async (req, res) => {
+  const bookings = await adminService.getAllBookings(req.query);
+  return success(res, {
+    message: "All bookings fetched successfully",
+    data: { bookings }
+  });
+});
+
 module.exports = {
   assignUserRole,
   getMetrics,
@@ -83,4 +91,5 @@ module.exports = {
   createBus,
   getDrivers,
   getUsers,
+  getAllBookings,
 };
