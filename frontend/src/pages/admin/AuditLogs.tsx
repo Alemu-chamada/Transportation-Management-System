@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { MainLayout } from "../../routes/MainLayout";
 import { DataTable, Column } from "../../shared/ui/DataTable";
 import { SearchBar } from "../../shared/ui/SearchBar";
 import { FilterPanel } from "../../shared/ui/FilterPanel";
+import { Loader2 } from "lucide-react";
+import { adminApi } from "../../features/admin/services";
 
 interface AuditLog {
   id: string;
@@ -12,69 +14,45 @@ interface AuditLog {
   action: string;
   targetUser: string;
   details: string;
-  ipAddress: string;
 }
 
 export function AuditLogs() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAction, setSelectedAction] = useState("all");
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const limit = 50;
 
-  const logs: AuditLog[] = [
-    {
-      id: "1",
-      timestamp: "2026-06-15 10:30:45",
-      actor: "admin@tms.com",
-      action: "User Created",
-      targetUser: "john.doe@gmail.com",
-      details: "New passenger account registered",
-      ipAddress: "192.168.1.100",
-    },
-    {
-      id: "2",
-      timestamp: "2026-06-15 10:25:12",
-      actor: "admin@tms.com",
-      action: "Trip Created",
-      targetUser: "N/A",
-      details: "Created trip: New York → Boston",
-      ipAddress: "192.168.1.100",
-    },
-    {
-      id: "3",
-      timestamp: "2026-06-15 10:15:33",
-      actor: "admin@tms.com",
-      action: "Role Assigned",
-      targetUser: "sarah.wilson@gmail.com",
-      details: "Changed role from passenger to driver",
-      ipAddress: "192.168.1.100",
-    },
-    {
-      id: "4",
-      timestamp: "2026-06-15 10:05:21",
-      actor: "system",
-      action: "Payment Processed",
-      targetUser: "mike.chen@gmail.com",
-      details: "Payment of $90 successfully processed",
-      ipAddress: "System",
-    },
-    {
-      id: "5",
-      timestamp: "2026-06-15 09:50:18",
-      actor: "admin@tms.com",
-      action: "User Suspended",
-      targetUser: "james.brown@gmail.com",
-      details: "Account suspended for policy violation",
-      ipAddress: "192.168.1.100",
-    },
-    {
-      id: "6",
-      timestamp: "2026-06-15 09:40:05",
-      actor: "system",
-      action: "Booking Confirmed",
-      targetUser: "emma.davis@gmail.com",
-      details: "Booking TMS-001-123 confirmed",
-      ipAddress: "System",
-    },
-  ];
+  useEffect(() => {
+    loadLogs();
+  }, [page, selectedAction]);
+
+  const loadLogs = async () => {
+    try {
+      setLoading(true);
+      const params: any = { page, limit };
+      if (selectedAction !== "all") params.action = selectedAction;
+      const data = await adminApi.getAuditLogs(params);
+      const raw = data?.logs || data?.audit_logs || [];
+      const mapped: AuditLog[] = raw.map((l: any) => ({
+        id: l.id?.toString() || String(Math.random()),
+        timestamp: l.created_at
+          ? new Date(l.created_at).toLocaleString()
+          : "—",
+        actor: l.actor_email || l.actor_id?.slice?.(0, 8) || "system",
+        action: l.action || "—",
+        targetUser: l.target_user_id?.slice?.(0, 8) || l.entity_type || "—",
+        details: l.metadata ? JSON.stringify(l.metadata) : l.entity_id || "—",
+      }));
+      setLogs(mapped);
+    } catch (error) {
+      console.error("Failed to load audit logs:", error);
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
@@ -82,9 +60,7 @@ export function AuditLogs() {
       log.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.targetUser.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.details.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesAction =
-      selectedAction === "all" || log.action === selectedAction;
-    return matchesSearch && matchesAction;
+    return matchesSearch;
   });
 
   const columns: Column<AuditLog>[] = [
@@ -93,11 +69,7 @@ export function AuditLogs() {
       key: "actor",
       label: "Actor",
       render: (log) => (
-        <span
-          className={`${
-            log.actor === "system" ? "text-muted-foreground italic" : "text-foreground"
-          }`}
-        >
+        <span className={log.actor === "system" ? "text-muted-foreground italic" : "text-foreground"}>
           {log.actor}
         </span>
       ),
@@ -105,84 +77,75 @@ export function AuditLogs() {
     {
       key: "action",
       label: "Action",
-      render: (log) => (
-        <span className="font-medium text-foreground">{log.action}</span>
-      ),
+      render: (log) => <span className="font-medium text-foreground">{log.action}</span>,
     },
-    { key: "targetUser", label: "Target User" },
-    { key: "details", label: "Details" },
+    { key: "targetUser", label: "Entity / Target" },
     {
-      key: "ipAddress",
-      label: "IP Address",
+      key: "details",
+      label: "Details",
       render: (log) => (
-        <span className="text-xs text-muted-foreground">{log.ipAddress}</span>
+        <span className="text-xs text-muted-foreground max-w-xs truncate block">{log.details}</span>
       ),
     },
   ];
 
-  const actionTypes = [
-    ...new Set(logs.map((log) => log.action)),
-  ].sort();
-
   return (
     <MainLayout>
       <div className="space-y-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Audit Logs
-          </h1>
-          <p className="text-muted-foreground">
-            System activity and security audit trail
-          </p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <h1 className="text-4xl font-bold text-foreground mb-2">Audit Logs</h1>
+          <p className="text-muted-foreground">System activity and security audit trail</p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
           <FilterPanel>
             <div className="flex-1 min-w-[250px]">
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search logs..."
-              />
+              <SearchBar value={searchQuery} onChange={setSearchQuery} placeholder="Search logs..." />
             </div>
             <div>
-              <label className="block text-sm text-muted-foreground mb-2">
-                Action Type
-              </label>
+              <label className="block text-sm text-muted-foreground mb-2">Action Type</label>
               <select
                 value={selectedAction}
-                onChange={(e) => setSelectedAction(e.target.value)}
+                onChange={(e) => { setSelectedAction(e.target.value); setPage(1); }}
                 className="px-4 py-3 rounded-xl bg-input-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">All Actions</option>
-                {actionTypes.map((action) => (
-                  <option key={action} value={action}>
-                    {action}
-                  </option>
+                {["LOGIN_SUCCESS", "LOGOUT", "OTP_SENT", "OTP_VERIFIED", "ROLE_CHANGED",
+                  "BOOKING_CREATED", "BOOKING_CANCELLED", "PAYMENT_SUCCESS", "PAYMENT_FAILURE"].map(a => (
+                  <option key={a} value={a}>{a.replace(/_/g, " ")}</option>
                 ))}
               </select>
             </div>
           </FilterPanel>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <DataTable
-            columns={columns}
-            data={filteredLogs}
-            emptyMessage="No audit logs found"
-          />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <>
+              <DataTable columns={columns} data={filteredLogs} emptyMessage="No audit logs found" />
+              {/* Pagination */}
+              {logs.length === limit && (
+                <div className="flex justify-center gap-3 mt-4">
+                  <button
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="px-4 py-2 rounded-xl border border-border text-sm font-medium disabled:opacity-40 hover:bg-muted transition-colors">
+                    ← Previous
+                  </button>
+                  <span className="px-4 py-2 text-sm text-muted-foreground">Page {page}</span>
+                  <button
+                    onClick={() => setPage(p => p + 1)}
+                    className="px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </motion.div>
       </div>
     </MainLayout>

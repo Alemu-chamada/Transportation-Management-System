@@ -81,6 +81,7 @@ export function TripManagement() {
   };
 
   const validateForm = () => {
+    if (!formData.driver_id) return "Please select a driver (required).";
     if (!formData.origin.trim()) return "Origin is required.";
     if (!formData.destination.trim()) return "Destination is required.";
     if (!formData.scheduled_start_time) return "Departure time is required.";
