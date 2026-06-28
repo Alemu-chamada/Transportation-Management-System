@@ -18,11 +18,29 @@ const DEV_ITEMS = [
   { Icon: MapPin,   label: "Education", value: "Computer Science & Eng · ASTU",  href: "https://www.astu.edu.et/" },
 ];
 
-// ── card approximate heights (used for connector geometry) ──
-const CARD_W       = 360;   // fixed card width on desktop
-const SYS_MID_Y    = 130;   // ~mid-height of system card header
-const DEV_OFFSET_X = 100;   // how far right dev card is from sys card left
-const V_GAP        = 300;   // vertical gap between card tops
+// ── Layout geometry matching the photo ─────────────────────────────────────
+// Container: max-w 920px
+// System card:    top=0,   left=0,       width=360px
+//   → right edge = 360px
+//   → connector exits at right-mid: (360, ~130)
+//
+// Connector column: at x=440 (80px gap after system card right edge)
+//   → goes from y=130 down to y=520 (390px vertical drop)
+//
+// Developer card: top=320, left=500      width=380px
+//   → left edge = 500 (connector turns right from x=440 → x=500)
+//   → connector enters at left-mid: (500, ~320+120=440)
+//
+// Total container height: 320 + 520 = 840px
+
+const CARD_W       = 360;   // System card width
+const DEV_W        = 380;   // Developer card width
+const DEV_TOP      = 320;   // Developer card top offset
+const DEV_LEFT     = 500;   // Developer card left offset
+const SYS_MID_Y    = 130;   // connector start y (mid of system card header)
+const DEV_MID_Y    = DEV_TOP + 120; // connector end y (mid of dev card header = 440)
+const CON_X        = 440;   // x of the vertical connector column
+const CONTAINER_H  = DEV_TOP + 520; // 840px total height
 
 export function ContactPage() {
   return (
@@ -57,9 +75,8 @@ export function ContactPage() {
       <section className="pb-28">
         <div className="w-full px-6 sm:px-10 lg:px-16 xl:px-20">
 
-          {/* DESKTOP: absolute positioned timeline */}
-          <div className="hidden lg:block relative"
-            style={{ height: V_GAP + 520 /* enough for both cards + gap */ }}>
+          {/* DESKTOP: absolute positioned — matches photo */}
+          <div className="hidden lg:block relative mx-auto" style={{ maxWidth: 920, height: CONTAINER_H }}>
 
             {/* System card — top-left */}
             <motion.div className="absolute top-0 left-0" style={{ width: CARD_W }}
@@ -73,8 +90,8 @@ export function ContactPage() {
               <MetroLine />
             </div>
 
-            {/* Developer card — offset below and slightly right */}
-            <motion.div className="absolute" style={{ top: V_GAP, left: DEV_OFFSET_X, width: CARD_W }}
+            {/* Developer card — bottom-right */}
+            <motion.div className="absolute" style={{ top: DEV_TOP, left: DEV_LEFT, width: DEV_W }}
               initial={{ opacity: 0, x: 28 }} whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }} transition={{ duration: 0.65, delay: 0.2 }}>
               <DeveloperCard />
@@ -265,41 +282,54 @@ function DeveloperCard() {
  * SVG viewBox = 500 × (V_GAP + 520)  = 500 × 820
  *
  * Route:
- *   Start  : (360, 130)  — System card right-mid
- *   H      : (420, 130)  — short horizontal jog right
- *   Bezier : curve down-left to (260, 300)
- *   V      : (260, 380)  — short vertical
- *   Bezier : curve down-left to (100, 420)  — Dev card left-mid
+/*
+ * ── MetroLine geometry (photo reference) ────────────────────────────────────
  *
- * Full path (smooth S-curve, no sharp corners):
- *   M 360 130  H 420
- *   C 460 130  460 300  260 300
- *   C 160 300  100 360  100 420
+ * Container: 920 × 840px (maxWidth set in layout)
+ *
+ * System card:    top=0,   left=0,    width=360  → right-mid = (360, 130)
+ * Developer card: top=320, left=500,  width=380  → left-mid  = (500, 440)
+ *
+ * Connector path (photo: jog right → long vertical → jog right):
+ *   M 360 130   — start: System card right-mid
+ *   H 440       — horizontal jog right (80px) to connector column x=440
+ *   V 440       — long vertical drop down to dev card mid level
+ *   H 500       — horizontal jog right (60px) to Developer card left-mid
+ *
+ * Station markers at x=440, y=220, 330 (along vertical segment)
+ * viewBox: 920 × 840
  */
-const VB_W = 500;
-const VB_H = V_GAP + 520;   // 820
-const METRO_PATH = `M ${CARD_W} ${SYS_MID_Y} H 420 C 460 ${SYS_MID_Y} 460 ${V_GAP} 260 ${V_GAP} C 160 ${V_GAP} ${DEV_OFFSET_X} ${V_GAP + 90} ${DEV_OFFSET_X} ${V_GAP + 120}`;
+const VB_W2 = 920;
+const VB_H2 = CONTAINER_H;  // 840
 
-const METRO_NODES = [
-  { x: 420, y: SYS_MID_Y,           Icon: MapPin,     label: "Depart"   },
-  { x: 260, y: V_GAP,               Icon: Bus,        label: "En Route" },
-  { x: DEV_OFFSET_X, y: V_GAP + 90, Icon: Navigation, label: "Arrive"   },
+// path segments using the new constants
+const P_START_X  = CARD_W;          // 360
+const P_START_Y  = SYS_MID_Y;       // 130
+const P_COL_X    = CON_X;           // 440
+const P_END_X    = DEV_LEFT;        // 500
+const P_END_Y    = DEV_MID_Y;       // 440
+
+const METRO_PATH2 = `M ${P_START_X} ${P_START_Y} H ${P_COL_X} V ${P_END_Y} H ${P_END_X}`;
+
+const METRO_NODES2 = [
+  { y: 220 },
+  { y: 330 },
 ];
 
 function MetroLine() {
   return (
     <svg width="100%" height="100%"
-      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      viewBox={`0 0 ${VB_W2} ${VB_H2}`}
       preserveAspectRatio="xMinYMin meet"
       fill="none"
       style={{ position: "absolute", inset: 0, overflow: "visible" }}>
       <defs>
-        <linearGradient id="mlg" x1="0.7" y1="0" x2="0.2" y2="1">
+        <linearGradient id="mlg" x1="0" y1="0" x2="0.2" y2="1">
           <stop offset="0%"   stopColor={C.red}    stopOpacity="0.95" />
-          <stop offset="50%"  stopColor={C.gold}   stopOpacity="0.9"  />
+          <stop offset="55%"  stopColor={C.gold}   stopOpacity="0.9"  />
           <stop offset="100%" stopColor={C.purple} stopOpacity="0.95" />
         </linearGradient>
-        <linearGradient id="mfl" x1="0.7" y1="0" x2="0.2" y2="1">
+        <linearGradient id="mfl" x1="0" y1="0" x2="0.2" y2="1">
           <stop offset="0%"   stopColor="#fff"     stopOpacity="0"   />
           <stop offset="42%"  stopColor={C.red}    stopOpacity="1"   />
           <stop offset="55%"  stopColor="#fff"     stopOpacity="1"   />
@@ -316,55 +346,64 @@ function MetroLine() {
       </defs>
 
       {/* Glow halo */}
-      <path d={METRO_PATH} stroke="url(#mlg)" strokeWidth={16} fill="none"
-        strokeLinecap="round" strokeLinejoin="round" opacity={0.1} />
+      <path d={METRO_PATH2} stroke="url(#mlg)" strokeWidth={14} fill="none"
+        strokeLinecap="square" strokeLinejoin="miter" opacity={0.1} />
 
       {/* Dashed track */}
-      <path d={METRO_PATH} stroke="url(#mlg)" strokeWidth={2} fill="none"
-        strokeLinecap="round" strokeLinejoin="round"
-        strokeDasharray="11 7" opacity={0.6} filter="url(#mg)" />
+      <path d={METRO_PATH2} stroke="url(#mlg)" strokeWidth={2} fill="none"
+        strokeLinecap="square" strokeLinejoin="miter"
+        strokeDasharray="10 7" opacity={0.6} filter="url(#mg)" />
 
-      {/* Solid line */}
-      <path d={METRO_PATH} stroke="url(#mlg)" strokeWidth={2.5} fill="none"
-        strokeLinecap="round" strokeLinejoin="round"
+      {/* Solid bright line */}
+      <path d={METRO_PATH2} stroke="url(#mlg)" strokeWidth={2.5} fill="none"
+        strokeLinecap="square" strokeLinejoin="miter"
         opacity={0.9} filter="url(#mg)" />
 
       {/* Animated particle */}
-      <motion.path d={METRO_PATH} stroke="url(#mfl)" strokeWidth={6} fill="none"
+      <motion.path d={METRO_PATH2} stroke="url(#mfl)" strokeWidth={6} fill="none"
         strokeLinecap="round"
         initial={{ pathOffset: 0 }}
         animate={{ pathOffset: [0, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
         filter="url(#msg)" opacity={0.95} />
 
-      {/* Station nodes */}
-      {METRO_NODES.map(({ x, y }, i) => (
-        <g key={i}>
-          <motion.circle cx={x} cy={y} r={11} fill="none" stroke={C.red} strokeWidth={1.2}
-            animate={{ r: [8, 20], opacity: [0.65, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.65 }} />
-          <circle cx={x} cy={y} r={8} fill="#FFF9FA"
-            stroke="url(#mlg)" strokeWidth={1.5} filter="url(#mg)" />
-          <circle cx={x} cy={y} r={3.5} fill="url(#mlg)" opacity={0.95} />
+      {/* Station hexagon markers along vertical segment */}
+      {METRO_NODES2.map(({ y }, i) => (
+        <g key={i} transform={`translate(${P_COL_X}, ${y})`}>
+          {/* Pulse ring */}
+          <motion.circle r={16} fill="none" stroke={i === 0 ? C.red : C.gold} strokeWidth={1}
+            animate={{ r: [12, 24], opacity: [0.6, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.8 }} />
+          {/* Hexagon shape */}
+          <polygon
+            points="0,-14 12,-7 12,7 0,14 -12,7 -12,-7"
+            fill="#FFF9FA" stroke="url(#mlg)" strokeWidth={1.5}
+            style={{ filter: "drop-shadow(0 2px 8px rgba(0,22,33,0.12))" }} />
+          {/* Inner dot */}
+          <circle r={4} fill={i === 0 ? C.red : C.gold} opacity={0.9} />
         </g>
       ))}
 
-      {/* Origin — System card right edge */}
-      <circle cx={CARD_W} cy={SYS_MID_Y} r={7} fill={C.red} filter="url(#mg)" />
-      <motion.circle cx={CARD_W} cy={SYS_MID_Y} r={7} fill="none"
+      {/* Origin dot — System card right-mid */}
+      <circle cx={P_START_X} cy={P_START_Y} r={7} fill={C.red} filter="url(#mg)" />
+      <motion.circle cx={P_START_X} cy={P_START_Y} r={7} fill="none"
         stroke={C.red} strokeWidth={1.5}
         animate={{ r: [7, 18], opacity: [0.85, 0] }}
         transition={{ duration: 1.4, repeat: Infinity }} />
 
-      {/* Destination arrowhead — Developer card left edge */}
-      <polygon
-        points={`${DEV_OFFSET_X - 12},${V_GAP + 113} ${DEV_OFFSET_X},${V_GAP + 120} ${DEV_OFFSET_X - 12},${V_GAP + 127}`}
-        fill={C.purple} opacity={0.95} />
-      <circle cx={DEV_OFFSET_X} cy={V_GAP + 120} r={7} fill={C.purple} filter="url(#mg)" />
-      <motion.circle cx={DEV_OFFSET_X} cy={V_GAP + 120} r={7} fill="none"
+      {/* Corner turn dot — where horizontal meets vertical */}
+      <circle cx={P_COL_X} cy={P_START_Y} r={5} fill={C.red} opacity={0.7} />
+
+      {/* Destination dot — Developer card left-mid */}
+      <circle cx={P_END_X} cy={P_END_Y} r={7} fill={C.purple} filter="url(#mg)" />
+      <motion.circle cx={P_END_X} cy={P_END_Y} r={7} fill="none"
         stroke={C.purple} strokeWidth={1.5}
         animate={{ r: [7, 18], opacity: [0.85, 0] }}
         transition={{ duration: 1.4, repeat: Infinity, delay: 0.7 }} />
+      {/* Arrowhead pointing right into dev card */}
+      <polygon
+        points={`${P_END_X - 11},${P_END_Y - 7} ${P_END_X},${P_END_Y} ${P_END_X - 11},${P_END_Y + 7}`}
+        fill={C.purple} opacity={0.9} />
     </svg>
   );
 }
