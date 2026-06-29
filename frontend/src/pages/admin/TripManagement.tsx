@@ -359,13 +359,32 @@ export function TripManagement() {
               >
                 Cancel
               </Button>
-              <Button
-                className="flex-1"
-                onClick={handleCreateTrip}
-                loading={loading}
-              >
-                Create Trip
-              </Button>
+              <div className="flex-1 flex flex-col gap-1">
+                <Button
+                  className="w-full"
+                  onClick={handleCreateTrip}
+                  loading={loading}
+                  disabled={
+                    !formData.driver_id ||
+                    !formData.origin.trim() ||
+                    !formData.destination.trim() ||
+                    !formData.scheduled_start_time ||
+                    formData.total_capacity < 1
+                  }
+                >
+                  Create Trip
+                </Button>
+                {(!formData.driver_id || !formData.origin.trim() || !formData.destination.trim() || !formData.scheduled_start_time) && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Fill in {[
+                      !formData.driver_id && "driver",
+                      !formData.origin.trim() && "origin",
+                      !formData.destination.trim() && "destination",
+                      !formData.scheduled_start_time && "departure time",
+                    ].filter(Boolean).join(", ")} to continue
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </Modal>
