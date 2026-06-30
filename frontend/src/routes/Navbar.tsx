@@ -119,17 +119,20 @@ export function Navbar() {
     }
   };
   
+  const [formMessage, setFormMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
   const handleUpdateName = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     try {
       setLoading(true);
       const updateResponse = await userApi.updateMe(editNameForm);
       updateUser(updateResponse.user);
-      alert('Name updated successfully!');
-      setIsEditingName(false);
-    } catch (error) {
+      setFormMessage({ text: 'Name updated successfully!', type: 'success' });
+      setTimeout(() => { setIsEditingName(false); setFormMessage(null); }, 1200);
+    } catch (error: any) {
       console.error('Error updating name:', error);
-      alert('Failed to update name. Please try again.');
+      setFormMessage({ text: error?.data?.message || 'Failed to update name. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -137,15 +140,17 @@ export function Navbar() {
 
   const handleSendChangeEmailOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     try {
       setLoading(true);
       await authApi.sendChangeEmailOtp(changeEmailForm);
       setPendingData(changeEmailForm);
       setOtpAction('change_email');
       setShowOtpForm(true);
-    } catch (error) {
+      setFormMessage(null);
+    } catch (error: any) {
       console.error('Error sending OTP for email change:', error);
-      alert('Failed to send OTP. Please try again.');
+      setFormMessage({ text: error?.data?.message || 'Failed to send OTP. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -153,15 +158,17 @@ export function Navbar() {
 
   const handleSendChangePhoneOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     try {
       setLoading(true);
       await authApi.sendChangePhoneOtp(changePhoneForm);
       setPendingData(changePhoneForm);
       setOtpAction('change_phone');
       setShowOtpForm(true);
-    } catch (error) {
+      setFormMessage(null);
+    } catch (error: any) {
       console.error('Error sending OTP for phone change:', error);
-      alert('Failed to send OTP. Please try again.');
+      setFormMessage({ text: error?.data?.message || 'Failed to send OTP. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -169,8 +176,13 @@ export function Navbar() {
 
   const handleSendChangePasswordOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     if (changePasswordForm.new_password !== changePasswordForm.confirm_password) {
-      alert('Passwords do not match!');
+      setFormMessage({ text: 'Passwords do not match!', type: 'error' });
+      return;
+    }
+    if (changePasswordForm.new_password.length < 8) {
+      setFormMessage({ text: 'New password must be at least 8 characters.', type: 'error' });
       return;
     }
     try {
@@ -182,9 +194,10 @@ export function Navbar() {
       setPendingData({ new_password: changePasswordForm.new_password });
       setOtpAction('change_password');
       setShowOtpForm(true);
-    } catch (error) {
+      setFormMessage(null);
+    } catch (error: any) {
       console.error('Error sending OTP for password change:', error);
-      alert('Failed to send OTP. Please try again.');
+      setFormMessage({ text: error?.data?.message || 'Failed to send OTP. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -192,28 +205,22 @@ export function Navbar() {
 
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     try {
       setLoading(true);
+
+      // The OTP was always sent to the user's CURRENT registered email.
+      // Pass that as the lookup contact for all change_* purposes so the
+      // backend can find the correct OTP record.
       const verifyData: any = {
         otp,
         purpose: otpAction,
         new_email: pendingData?.new_email,
         new_phone: pendingData?.new_phone,
-        new_password: pendingData?.new_password
+        new_password: pendingData?.new_password,
+        // Always use current email as lookup — backend stored OTP against it
+        email: user?.email,
       };
-
-      // Set the correct lookup contact based on purpose
-      if (otpAction === 'change_email') {
-        verifyData.email = pendingData?.new_email;
-      } else if (otpAction === 'change_phone') {
-        verifyData.phone = pendingData?.new_phone;
-      } else if (otpAction === 'change_password') {
-        verifyData.email = user?.email;
-        verifyData.phone = user?.phone;
-      } else {
-        verifyData.email = user?.email;
-        verifyData.phone = user?.phone;
-      }
 
       const verifyResponse = await authApi.verifyOtp(verifyData);
 
@@ -221,26 +228,26 @@ export function Navbar() {
         updateUser(verifyResponse.user);
       }
 
-      alert('OTP verified! Account updated successfully!');
+      setFormMessage({ text: 'Account updated successfully!', type: 'success' });
 
-      // Reset all forms
-      setShowOtpForm(false);
-      setOtp('');
-      setOtpAction(null);
-      setPendingData(null);
-      setIsChangingEmail(false);
-      setIsChangingPhone(false);
-      setIsChangingPassword(false);
-      setChangeEmailForm({ new_email: '' });
-      setChangePhoneForm({ new_phone: '' });
-      setChangePasswordForm({
-        old_password: '',
-        new_password: '',
-        confirm_password: ''
-      });
-    } catch (error) {
+      // Brief pause so user sees the success message, then close everything
+      setTimeout(() => {
+        setShowOtpForm(false);
+        setShowAccount(false);
+        setOtp('');
+        setOtpAction(null);
+        setPendingData(null);
+        setIsChangingEmail(false);
+        setIsChangingPhone(false);
+        setIsChangingPassword(false);
+        setChangeEmailForm({ new_email: '' });
+        setChangePhoneForm({ new_phone: '' });
+        setChangePasswordForm({ old_password: '', new_password: '', confirm_password: '' });
+        setFormMessage(null);
+      }, 1500);
+    } catch (error: any) {
       console.error('Error verifying OTP:', error);
-      alert('Failed to verify OTP. Please try again.');
+      setFormMessage({ text: error?.data?.message || 'Invalid or expired OTP. Please try again.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -413,10 +420,22 @@ export function Navbar() {
                           setIsChangingEmail(false);
                           setIsChangingPhone(false);
                           setIsChangingPassword(false);
+                          setFormMessage(null);
                         }} className="text-muted-foreground hover:text-foreground">
                           <X className="h-5 w-5" />
                         </button>
                       </div>
+
+                      {/* Inline message banner */}
+                      {formMessage && (
+                        <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${
+                          formMessage.type === 'success'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-red-50 text-red-700 border border-red-200'
+                        }`}>
+                          {formMessage.text}
+                        </div>
+                      )}
 
                       {/* Account Info */}
                       {!isEditingName && !isChangingEmail && !isChangingPhone && !isChangingPassword && (
@@ -427,7 +446,7 @@ export function Navbar() {
                               <p className="text-foreground font-medium">{user?.full_name || '—'}</p>
                             </div>
                             <button
-                              onClick={() => setIsEditingName(true)}
+                              onClick={() => { setIsEditingName(true); setFormMessage(null); }}
                               className="text-muted-foreground hover:text-foreground"
                             >
                               <Pencil className="h-4 w-4" />
@@ -439,7 +458,7 @@ export function Navbar() {
                               <p className="text-foreground font-medium">{user?.email || '—'}</p>
                             </div>
                             <button
-                              onClick={() => setIsChangingEmail(true)}
+                              onClick={() => { setIsChangingEmail(true); setFormMessage(null); }}
                               className="text-muted-foreground hover:text-foreground"
                             >
                               <Pencil className="h-4 w-4" />
@@ -451,7 +470,7 @@ export function Navbar() {
                               <p className="text-foreground font-medium">{user?.phone || '—'}</p>
                             </div>
                             <button
-                              onClick={() => setIsChangingPhone(true)}
+                              onClick={() => { setIsChangingPhone(true); setFormMessage(null); }}
                               className="text-muted-foreground hover:text-foreground"
                             >
                               <Pencil className="h-4 w-4" />
@@ -464,7 +483,7 @@ export function Navbar() {
                             </div>
                           </div>
                           <button
-                            onClick={() => setIsChangingPassword(true)}
+                            onClick={() => { setIsChangingPassword(true); setFormMessage(null); }}
                             className="w-full mt-4 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
                           >
                             Change Password
@@ -664,26 +683,40 @@ export function Navbar() {
                           setOtp('');
                           setOtpAction(null);
                           setPendingData(null);
+                          setFormMessage(null);
                         }} className="text-muted-foreground hover:text-foreground">
                           <X className="h-5 w-5" />
                         </button>
                       </div>
 
-                      <p className="text-muted-foreground mb-4">
-                        Enter the OTP sent to your {otpAction === 'change_email' ? 'new email' : otpAction === 'change_phone' ? 'new phone' : 'email or phone'} to complete the update.
+                      <p className="text-muted-foreground mb-3 text-sm">
+                        A verification code was sent to your registered email
+                        {user?.email ? <strong> ({user.email})</strong> : ''}.
+                        Enter it below to confirm the change.
                       </p>
+
+                      {/* Inline message */}
+                      {formMessage && (
+                        <div className={`mb-3 px-4 py-3 rounded-xl text-sm font-medium ${
+                          formMessage.type === 'success'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-red-50 text-red-700 border border-red-200'
+                        }`}>
+                          {formMessage.text}
+                        </div>
+                      )}
 
                       <form className="space-y-4" onSubmit={handleOtpSubmit}>
                         <Input
                           label="One-Time Password"
                           type="text"
                           value={otp}
-                          onChange={(e) => setOtp(e.target.value)}
+                          onChange={(e) => { setOtp(e.target.value); setFormMessage(null); }}
                           required
                           maxLength={6}
                           placeholder="000000"
                         />
-                        <div className="flex gap-2 mt-6">
+                        <div className="flex gap-2 mt-4">
                           <button
                             type="button"
                             onClick={() => {
@@ -691,6 +724,7 @@ export function Navbar() {
                               setOtp('');
                               setOtpAction(null);
                               setPendingData(null);
+                              setFormMessage(null);
                             }}
                             className="flex-1 px-4 py-2 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-colors"
                           >
@@ -699,11 +733,37 @@ export function Navbar() {
                           <button
                             type="submit"
                             className="flex-1 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
-                            disabled={loading}
+                            disabled={loading || otp.length < 6}
                           >
-                            {loading ? 'Verifying...' : 'Verify OTP'}
+                            {loading ? 'Verifying…' : 'Verify OTP'}
                           </button>
                         </div>
+                        {/* Resend OTP */}
+                        <button
+                          type="button"
+                          className="w-full text-xs text-muted-foreground hover:text-foreground text-center mt-1 transition-colors"
+                          disabled={loading}
+                          onClick={async () => {
+                            setFormMessage(null);
+                            try {
+                              if (otpAction === 'change_email' && pendingData?.new_email) {
+                                await authApi.sendChangeEmailOtp({ new_email: pendingData.new_email });
+                              } else if (otpAction === 'change_phone' && pendingData?.new_phone) {
+                                await authApi.sendChangePhoneOtp({ new_phone: pendingData.new_phone });
+                              } else if (otpAction === 'change_password' && pendingData?.new_password) {
+                                await authApi.sendChangePasswordOtp({
+                                  old_password: changePasswordForm.old_password,
+                                  new_password: pendingData.new_password,
+                                });
+                              }
+                              setFormMessage({ text: 'A new OTP has been sent to your email.', type: 'success' });
+                            } catch (err: any) {
+                              setFormMessage({ text: err?.data?.message || 'Failed to resend OTP.', type: 'error' });
+                            }
+                          }}
+                        >
+                          Didn't receive it? Resend OTP
+                        </button>
                       </form>
                     </div>
                   </motion.div>

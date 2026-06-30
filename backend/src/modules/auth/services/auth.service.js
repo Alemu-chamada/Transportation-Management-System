@@ -139,8 +139,9 @@ const sendChangeEmailOtp = async ({ user, new_email }) => {
     throw new ApiError(409, "Email already registered.", "DUPLICATE_EMAIL");
   }
 
+  // Send OTP to the user's CURRENT registered email (not the new one)
   const result = await otpService.createOtp({
-    email: new_email,
+    email: user.email,
     userId: user.id,
     purpose: "change_email",
   });
@@ -170,8 +171,9 @@ const sendChangePhoneOtp = async ({ user, new_phone }) => {
     throw new ApiError(409, "Phone already registered.", "DUPLICATE_PHONE");
   }
 
+  // Send OTP to the user's CURRENT registered email (SMS not implemented)
   const result = await otpService.createOtp({
-    phone: new_phone,
+    email: user.email,
     userId: user.id,
     purpose: "change_phone",
   });
@@ -223,28 +225,23 @@ const verifyOtp = async ({ email, phone, otp, purpose, new_email, new_phone, new
     hasAuthenticatedUser: !!authenticatedUser,
   });
   
-  // Determine lookup contact and which email/phone to pass to otpService
-  let lookupContact;
-  let otpEmail = email;
-  let otpPhone = phone;
+  // Determine which contact was used when the OTP was created/sent
+  let otpEmail;
+  let otpPhone;
   
-  if (purpose === "change_email") {
-    lookupContact = new_email;
-    otpEmail = new_email;
-    otpPhone = undefined;
-  } else if (purpose === "change_phone") {
-    lookupContact = new_phone;
-    otpPhone = new_phone;
-    otpEmail = undefined;
-  } else if (purpose === "change_password") {
-    lookupContact = email || phone;
-    // For change_password, use the existing user's contact
+  if (purpose === "change_email" || purpose === "change_phone" || purpose === "change_password") {
+    // All account-change OTPs are sent to the user's CURRENT registered email
     if (authenticatedUser) {
       otpEmail = authenticatedUser.email;
-      otpPhone = authenticatedUser.phone;
+      otpPhone = undefined;
+    } else {
+      otpEmail = email;
+      otpPhone = phone;
     }
   } else {
-    lookupContact = email || phone;
+    // login / registration / reset_password — use whatever contact the caller supplied
+    otpEmail = email;
+    otpPhone = phone;
   }
 
   try {

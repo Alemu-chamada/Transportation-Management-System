@@ -1,11 +1,13 @@
 const router = require("express").Router();
 const authController = require("../controllers/auth.controller.js");
 const authMiddleware = require("../../../shared/middleware/auth.middleware.js");
+const optionalAuthMiddleware = require("../../../shared/middleware/optionalAuth.middleware.js");
 const { authRateLimiter } = require("../../../shared/middleware/rateLimit.middleware.js");
 
 router.post("/register", authRateLimiter, authController.register);
 router.post("/login", authRateLimiter, authController.login);
-router.post("/verify-otp", authRateLimiter, authController.verifyOtp);
+// verify-otp handles both unauthenticated (login/register) and authenticated (change_*) flows
+router.post("/verify-otp", optionalAuthMiddleware, authRateLimiter, authController.verifyOtp);
 router.post("/resend-otp", authRateLimiter, authController.resendOtp);
 router.post("/forgot-password", authRateLimiter, authController.forgotPassword);
 router.post("/reset-password", authRateLimiter, authController.resetPassword);
