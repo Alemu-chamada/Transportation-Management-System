@@ -17,7 +17,6 @@ import {
   Activity,
   ShieldCheck,
   CreditCard,
-  Bell,
   ChevronRight,
   Clock,
 } from "lucide-react";

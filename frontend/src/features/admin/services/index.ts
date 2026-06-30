@@ -105,4 +105,14 @@ export const adminApi = {
     if (!response?.data?.data) throw new Error('Invalid response from server');
     return response.data.data;
   },
+
+  getAllPayments: async (params?: { status?: string; page?: number; limit?: number }) => {
+    const response = await apiService.get<{
+      success: boolean;
+      message: string;
+      data: { payments: any[] };
+    }>('/admin/payments', params);
+    if (!response?.data?.data) throw new Error('Invalid response from server');
+    return response.data.data;
+  },
 };

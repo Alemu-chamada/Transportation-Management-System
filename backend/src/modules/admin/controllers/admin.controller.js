@@ -82,6 +82,14 @@ const getAllBookings = asyncHandler(async (req, res) => {
   });
 });
 
+const getAllPayments = asyncHandler(async (req, res) => {
+  const payments = await adminService.getAllPayments(req.query);
+  return success(res, {
+    message: "All payments fetched successfully",
+    data: { payments }
+  });
+});
+
 module.exports = {
   assignUserRole,
   getMetrics,
@@ -92,4 +100,5 @@ module.exports = {
   getDrivers,
   getUsers,
   getAllBookings,
+  getAllPayments,
 };

@@ -220,6 +220,38 @@ const getAllBookings = async ({ status, page = 1, limit = 100 } = {}) => {
   return result.rows;
 };
 
+const getAllPayments = async ({ status, page = 1, limit = 100 } = {}) => {
+  const params = [];
+  const conditions = [];
+
+  if (status && status !== 'all') {
+    params.push(status);
+    conditions.push(`p.gateway_status = $${params.length}`);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  params.push(limit);
+  params.push((page - 1) * limit);
+
+  const result = await db.query(
+    `SELECT p.*,
+            u.full_name  AS passenger_name,
+            u.email      AS passenger_email,
+            t.origin,
+            t.destination,
+            t.currency   AS trip_currency
+     FROM payments p
+     JOIN bookings b  ON b.id  = p.booking_id
+     JOIN users    u  ON u.id  = b.passenger_id
+     JOIN trips    t  ON t.id  = b.trip_id
+     ${where}
+     ORDER BY p.created_at DESC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params
+  );
+  return result.rows;
+};
+
 module.exports = {
   assignUserRole,
   getMetrics,
@@ -230,4 +262,5 @@ module.exports = {
   getDrivers,
   getUsers,
   getAllBookings,
+  getAllPayments,
 };
