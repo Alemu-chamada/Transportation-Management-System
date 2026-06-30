@@ -16,7 +16,9 @@ const createTrip = asyncHandler(async (req, res) => {
 });
 
 const getScheduledTrips = asyncHandler(async (req, res) => {
-  const trips = await tripService.getScheduledTrips();
+  // Admin users can pass ?all=true to see all trips regardless of status/time
+  const allTrips = req.query.all === 'true' && req.user?.role === 'system_admin';
+  const trips = await tripService.getScheduledTrips({ all: allTrips });
 
   return success(res, {
     message: "Scheduled trips fetched successfully",

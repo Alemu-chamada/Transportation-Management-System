@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { MainLayout } from "../routes/MainLayout";
 import { Card } from "../shared/ui/Card";
@@ -40,6 +40,30 @@ const EMPTY_FORM = {
   description: "",
 };
 
+/* ── Toast helper ──────────────────────────────────────────────────────── */
+function Toast({
+  message, type, onClose,
+}: { message: string; type: "success" | "error"; onClose: () => void }) {
+  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 24 }}
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold"
+      style={{
+        backgroundColor: type === "success" ? "#001621" : "#FD1843",
+        color: "#fff",
+      }}
+    >
+      {type === "success"
+        ? <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+        : <XCircle className="h-4 w-4 flex-shrink-0" />}
+      {message}
+    </motion.div>
+  );
+}
+
 // Extract lat/lng from a Google Maps link
 function extractCoordsFromMapsLink(url: string): { lat: string; lng: string } | null {
   const patterns = [
@@ -72,6 +96,8 @@ export function NearbyServices() {
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const showToast = useCallback((message: string, type: "success" | "error") => setToast({ message, type }), []);
 
   // Load services
   useEffect(() => { loadServices(); }, []);
@@ -176,6 +202,7 @@ export function NearbyServices() {
       });
       setIsCreateOpen(false);
       await loadServices();
+      showToast("Service created successfully!", "success");
     } catch (e: any) {
       setFormError(e.data?.message || e.message || "Failed to create service.");
     } finally { setFormLoading(false); }
@@ -198,6 +225,7 @@ export function NearbyServices() {
       });
       setEditService(null);
       await loadServices();
+      showToast("Service updated successfully!", "success");
     } catch (e: any) {
       setFormError(e.data?.message || e.message || "Failed to update service.");
     } finally { setFormLoading(false); }
@@ -205,8 +233,14 @@ export function NearbyServices() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this service?")) return;
-    try { await serviceApi.deleteService(id); await loadServices(); }
-    catch (e) { console.error(e); }
+    try {
+      await serviceApi.deleteService(id);
+      await loadServices();
+      showToast("Service deleted.", "success");
+    }
+    catch (e: any) {
+      showToast(e.data?.message || "Failed to delete service.", "error");
+    }
   };
 
   const ServiceForm = () => (
@@ -245,7 +279,7 @@ export function NearbyServices() {
         <Input label="Description" value={formData.description} onChange={e => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Short description" />
       </div>
       <div className="flex gap-3 pt-2">
-        <Button variant="secondary" className="flex-1" onClick={() => { setIsCreateOpen(false); setEditService(null); }}>Cancel</Button>
+        <Button variant="secondary" className="flex-1" onClick={() => { setIsCreateOpen(false); setEditService(null); setFormError(null); }}>Cancel</Button>
         <Button className="flex-1" loading={formLoading} onClick={editService ? handleUpdate : handleCreate}>
           {editService ? "Save Changes" : "Create Service"}
         </Button>
@@ -417,6 +451,11 @@ export function NearbyServices() {
           <ServiceForm />
         </Modal>
       </div>
+
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </MainLayout>
   );
 }

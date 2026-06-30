@@ -29,8 +29,9 @@ export function SignUp() {
     const e: Record<string, string> = {};
     if (!formData.firstName.trim()) e.firstName = "First name is required";
     if (!formData.lastName.trim()) e.lastName = "Last name is required";
-    if (!formData.email.trim() && !formData.phone.trim())
-      e.email = "Either email or phone is required";
+    if (!formData.email.trim()) e.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email.trim())) e.email = "Enter a valid email address";
+    if (!formData.phone.trim()) e.phone = "Phone number is required";
     if (!formData.password.trim()) e.password = "Password is required";
     if (formData.password.length > 0 && formData.password.length < 8)
       e.password = "Password must be at least 8 characters";
@@ -45,8 +46,8 @@ export function SignUp() {
     if (!validate()) return;
     setLoading(true);
     try {
-      const email = formData.email.trim() || undefined;
-      const phone = formData.phone.trim() || undefined;
+      const email = formData.email.trim();
+      const phone = formData.phone.trim();
       await authApi.register({
         first_name: formData.firstName.trim(),
         last_name: formData.lastName.trim(),
@@ -151,9 +152,7 @@ export function SignUp() {
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-bold mb-1.5" style={{ color: "#001621" }}>
-              Phone <span className="text-muted-foreground font-normal">(optional if email given)</span>
-            </label>
+            <label className="block text-sm font-bold mb-1.5" style={{ color: "#001621" }}>Phone</label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <input

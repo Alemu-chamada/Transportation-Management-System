@@ -252,7 +252,7 @@ export function Navbar() {
     { label: 'My Bookings', path: '/my-bookings' },
     { label: 'Community', path: '/community' },
     { label: 'Nearby Services', path: '/nearby' },
-    ...(user?.role === 'system_admin' ? [{ label: 'Admin', path: '/admin' }] : []),
+    ...(user?.role === 'system_admin' ? [{ label: 'Admin', path: '/admin/trips' }] : []),
   ];
 
   return (
@@ -260,17 +260,13 @@ export function Navbar() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                <span className="text-primary-foreground font-bold text-lg">T</span>
-              </div>
-              <span className="font-bold text-xl text-foreground hidden sm:block">TMS</span>
-            </Link>
+            <Logo />
 
             <div className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path ||
-                  (item.path !== '/dashboard' && location.pathname.startsWith(item.path));
+                  (item.path !== '/dashboard' && location.pathname.startsWith(item.path)) ||
+                  (item.path === '/admin/trips' && location.pathname.startsWith('/admin'));
                 return (
                   <Link
                     key={item.path}

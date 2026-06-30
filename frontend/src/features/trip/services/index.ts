@@ -60,12 +60,12 @@ export interface CreateTripRequest {
 }
 
 export const tripApi = {
-  getScheduledTrips: async () => {
+  getScheduledTrips: async (params?: { all?: boolean }) => {
     const response = await apiService.get<{
       success: boolean;
       message: string;
       data: { trips: Trip[] };
-    }>('/trips/scheduled');
+    }>('/trips/scheduled', params);
     if (!response?.data?.data) {
       throw new Error('Invalid response from server');
     }
@@ -120,6 +120,27 @@ export const tripApi = {
     if (!response?.data?.success) {
       throw new Error('Invalid response from server');
     }
+    return response.data;
+  },
+
+  updateTrip: async (tripId: string, data: Partial<CreateTripRequest> & { status?: string }) => {
+    const response = await apiService.patch<{
+      success: boolean;
+      message: string;
+      data: { trip: Trip };
+    }>(`/trips/${tripId}`, data);
+    if (!response?.data?.data) {
+      throw new Error('Invalid response from server');
+    }
+    return response.data.data;
+  },
+
+  deleteTrip: async (tripId: string) => {
+    const response = await apiService.delete<{
+      success: boolean;
+      message: string;
+      data: any;
+    }>(`/trips/${tripId}`);
     return response.data;
   },
 };

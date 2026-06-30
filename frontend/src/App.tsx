@@ -70,7 +70,7 @@ export default function App() {
         <Route path="/community" element={<ProtectedRoute><PostsAndComments /></ProtectedRoute>} />
         <Route path="/nearby" element={<ProtectedRoute><NearbyServices /></ProtectedRoute>} />
         <Route path="/tracking" element={<ProtectedRoute><Tracking /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}><Navigate to="/dashboard" replace /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}><Navigate to="/admin/trips" replace /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}><UserManagement /></ProtectedRoute>} />
         <Route path="/admin/buses" element={<ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}><BusManagement /></ProtectedRoute>} />
         <Route path="/admin/trips" element={<ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}><TripManagement /></ProtectedRoute>} />
