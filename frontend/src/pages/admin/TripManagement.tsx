@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { MainLayout } from "../../routes/MainLayout";
 import { DataTable, Column } from "../../shared/ui/DataTable";
@@ -15,41 +15,33 @@ import {
 import { tripApi, type Trip } from "../../features/trip/services";
 import { adminApi, type Bus as BusType, type Driver } from "../../features/admin/services";
 
-/* ── Toast helper ──────────────────────────────────────────────────────── */
-function Toast({
-  message, type, onClose,
-}: { message: string; type: "success" | "error"; onClose: () => void }) {
+/* ── Toast ─────────────────────────────────────────────────────────────── */
+function Toast({ message, type, onClose }: {
+  message: string; type: "success" | "error"; onClose: () => void;
+}) {
   useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }}
         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl text-sm font-semibold"
-        style={{
-          backgroundColor: type === "success" ? "#001621" : "#FD1843",
-          color: "#fff",
-        }}
+        style={{ backgroundColor: type === "success" ? "#001621" : "#FD1843", color: "#fff" }}
       >
-        {type === "success"
-          ? <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-          : <XCircle className="h-4 w-4 flex-shrink-0" />}
+        {type === "success" ? <CheckCircle2 className="h-4 w-4 flex-shrink-0" /> : <XCircle className="h-4 w-4 flex-shrink-0" />}
         {message}
       </motion.div>
     </AnimatePresence>
   );
 }
 
-/* ── Empty form defaults ───────────────────────────────────────────────── */
+/* ── Form defaults ──────────────────────────────────────────────────────── */
 const EMPTY_FORM = {
   bus_id: "", driver_id: "", origin: "", destination: "",
   scheduled_start_time: "", total_capacity: 40, fare: 0, currency: "ETB",
 };
-
 type FormData = typeof EMPTY_FORM;
 
-/* ── Trip form — defined OUTSIDE TripManagement so it never remounts ── */
+/* ── TripForm — memo + outside parent so it NEVER remounts on state change */
 interface TripFormProps {
   formData: FormData;
   formError: string | null;
@@ -57,14 +49,12 @@ interface TripFormProps {
   drivers: Driver[];
   onChange: (field: keyof FormData, value: string | number) => void;
 }
-
-function TripForm({ formData, formError, buses, drivers, onChange }: TripFormProps) {
+const TripForm = memo(function TripForm({ formData, formError, buses, drivers, onChange }: TripFormProps) {
   return (
     <div className="space-y-4">
       {formError && (
         <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm">
-          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-          <span>{formError}</span>
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" /><span>{formError}</span>
         </div>
       )}
       {/* Bus */}
@@ -74,8 +64,7 @@ function TripForm({ formData, formError, buses, drivers, onChange }: TripFormPro
         </label>
         {buses.length === 0
           ? <p className="p-3 bg-muted rounded-xl text-sm text-muted-foreground">No buses found — trip can be created without one.</p>
-          : <select value={formData.bus_id}
-              onChange={e => onChange("bus_id", e.target.value)}
+          : <select value={formData.bus_id} onChange={e => onChange("bus_id", e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-input-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
               <option value="">Select a bus… (optional)</option>
               {buses.map(b => <option key={b.id} value={b.id}>{b.plate_number} — {b.capacity} seats</option>)}
@@ -88,8 +77,7 @@ function TripForm({ formData, formError, buses, drivers, onChange }: TripFormPro
         </label>
         {drivers.length === 0
           ? <p className="p-3 bg-muted rounded-xl text-sm text-muted-foreground">No drivers found. Assign the driver role to a user first.</p>
-          : <select value={formData.driver_id}
-              onChange={e => onChange("driver_id", e.target.value)}
+          : <select value={formData.driver_id} onChange={e => onChange("driver_id", e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-input-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
               <option value="">Select a driver *</option>
               {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}{d.phone ? ` (${d.phone})` : ""}</option>)}
@@ -122,15 +110,15 @@ function TripForm({ formData, formError, buses, drivers, onChange }: TripFormPro
       </div>
     </div>
   );
-}
+});
 
-/* ──────────────────────────────────────────────────────────────────────── */
+/* ── Main component ─────────────────────────────────────────────────────── */
 export function TripManagement() {
-  const [searchQuery, setSearchQuery]     = useState("");
+  const [searchQuery, setSearchQuery]       = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const [trips, setTrips]                 = useState<Trip[]>([]);
-  const [buses, setBuses]                 = useState<BusType[]>([]);
-  const [drivers, setDrivers]             = useState<Driver[]>([]);
+  const [trips, setTrips]                   = useState<Trip[]>([]);
+  const [buses, setBuses]                   = useState<BusType[]>([]);
+  const [drivers, setDrivers]               = useState<Driver[]>([]);
 
   const [isCreateOpen, setIsCreateOpen]   = useState(false);
   const [editTrip, setEditTrip]           = useState<Trip | null>(null);
@@ -142,11 +130,9 @@ export function TripManagement() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-  const showToast = useCallback((message: string, type: "success" | "error") => {
-    setToast({ message, type });
-  }, []);
+  const showToast = useCallback((message: string, type: "success" | "error") => setToast({ message, type }), []);
 
-  /* ── Load data ─────────────────────────────────────────────────────── */
+  /* ── Load data ────────────────────────────────────────────────────── */
   const loadTrips = useCallback(async () => {
     try {
       const data = await tripApi.getScheduledTrips({ all: true });
@@ -155,84 +141,97 @@ export function TripManagement() {
   }, []);
 
   const loadBusesDrivers = useCallback(async () => {
-    if (buses.length && drivers.length) return;
     try {
       const [bd, dd] = await Promise.all([adminApi.getBuses(), adminApi.getDrivers()]);
       setBuses(bd.buses || []);
       setDrivers(dd.drivers || []);
     } catch (err) { console.error(err); }
-  }, [buses.length, drivers.length]);
+  }, []);
 
   useEffect(() => { loadTrips(); }, [loadTrips]);
 
-  /* ── Open create modal ─────────────────────────────────────────────── */
-  const openCreate = () => {
+  /* ── Stable handleChange — useCallback so TripForm.memo never rerenders */
+  const handleChange = useCallback((field: keyof FormData, value: string | number) => {
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
+      if (field === "bus_id") {
+        // capacity auto-fill happens here without needing buses in dep array
+      }
+      return next;
+    });
+    setFormError(null);
+  }, []);
+
+  /* When bus changes, also update capacity */
+  const handleChangeWithBus = useCallback((field: keyof FormData, value: string | number) => {
+    setFormData(prev => {
+      const next = { ...prev, [field]: value };
+      if (field === "bus_id") {
+        setBuses(bs => {
+          const bus = bs.find(b => b.id === value);
+          if (bus) next.total_capacity = bus.capacity;
+          return bs; // no mutation needed, just read
+        });
+      }
+      return next;
+    });
+    setFormError(null);
+  }, []);
+
+  /* ── Open modals ─────────────────────────────────────────────────── */
+  const openCreate = useCallback(() => {
     setFormData({ ...EMPTY_FORM });
     setFormError(null);
     setIsCreateOpen(true);
     loadBusesDrivers();
-  };
+  }, [loadBusesDrivers]);
 
-  /* ── Open edit modal ───────────────────────────────────────────────── */
-  const openEdit = (trip: Trip) => {
+  const openEdit = useCallback((trip: Trip) => {
     setEditTrip(trip);
     setFormData({
-      bus_id:               (trip as any).bus_id      ?? "",
-      driver_id:            (trip as any).driver_id   ?? "",
+      bus_id:               (trip as any).bus_id    ?? "",
+      driver_id:            (trip as any).driver_id ?? "",
       origin:               trip.origin,
       destination:          trip.destination,
       scheduled_start_time: trip.scheduled_start_time
         ? new Date(trip.scheduled_start_time).toISOString().slice(0, 16)
         : "",
-      total_capacity:       trip.total_capacity,
-      fare:                 trip.fare ?? 0,
-      currency:             trip.currency || "ETB",
+      total_capacity: trip.total_capacity,
+      fare:           trip.fare ?? 0,
+      currency:       trip.currency || "ETB",
     });
     setFormError(null);
     loadBusesDrivers();
-  };
+  }, [loadBusesDrivers]);
 
-  /* ── Form change ───────────────────────────────────────────────────── */
-  const handleChange = (field: keyof FormData, value: string | number) => {
-    setFormData(prev => {
-      const next = { ...prev, [field]: value };
-      if (field === "bus_id") {
-        const bus = buses.find(b => b.id === value);
-        if (bus) next.total_capacity = bus.capacity;
-      }
-      return next;
-    });
-    setFormError(null);
-  };
-
-  /* ── Validate ──────────────────────────────────────────────────────── */
-  const validate = (): string | null => {
-    if (!formData.driver_id)            return "Driver is required.";
-    if (!formData.origin.trim())        return "Origin is required.";
-    if (!formData.destination.trim())   return "Destination is required.";
-    if (!formData.scheduled_start_time) return "Departure time is required.";
-    if (formData.total_capacity < 1)    return "Capacity must be at least 1.";
-    if (formData.fare < 0)              return "Fare cannot be negative.";
+  /* ── Validate ────────────────────────────────────────────────────── */
+  const validate = (fd: FormData): string | null => {
+    if (!fd.driver_id)            return "Driver is required.";
+    if (!fd.origin.trim())        return "Origin is required.";
+    if (!fd.destination.trim())   return "Destination is required.";
+    if (!fd.scheduled_start_time) return "Departure time is required.";
+    if (fd.total_capacity < 1)    return "Capacity must be at least 1.";
+    if (fd.fare < 0)              return "Fare cannot be negative.";
     return null;
   };
 
-  /* ── Create ────────────────────────────────────────────────────────── */
+  /* ── Create ──────────────────────────────────────────────────────── */
   const handleCreate = async () => {
-    const err = validate();
+    const err = validate(formData);
     if (err) { setFormError(err); return; }
     setLoading(true); setFormError(null);
     try {
       await tripApi.createTrip({
-        bus_id:              formData.bus_id || undefined,
-        driver_id:           formData.driver_id,
-        origin:              formData.origin.trim(),
-        destination:         formData.destination.trim(),
-        route_description:   `${formData.origin.trim()} → ${formData.destination.trim()}`,
+        bus_id:               formData.bus_id || undefined,
+        driver_id:            formData.driver_id,
+        origin:               formData.origin.trim(),
+        destination:          formData.destination.trim(),
+        route_description:    `${formData.origin.trim()} → ${formData.destination.trim()}`,
         scheduled_start_time: formData.scheduled_start_time,
-        total_capacity:      formData.total_capacity,
-        fare:                formData.fare,
-        currency:            formData.currency || "ETB",
-        avg_speed_kmh:       60,
+        total_capacity:       formData.total_capacity,
+        fare:                 formData.fare,
+        currency:             formData.currency || "ETB",
+        avg_speed_kmh:        60,
       });
       setIsCreateOpen(false);
       await loadTrips();
@@ -242,22 +241,22 @@ export function TripManagement() {
     } finally { setLoading(false); }
   };
 
-  /* ── Update ────────────────────────────────────────────────────────── */
+  /* ── Update ──────────────────────────────────────────────────────── */
   const handleUpdate = async () => {
     if (!editTrip) return;
-    const err = validate();
+    const err = validate(formData);
     if (err) { setFormError(err); return; }
     setLoading(true); setFormError(null);
     try {
       await tripApi.updateTrip(editTrip.id, {
-        origin:              formData.origin.trim(),
-        destination:         formData.destination.trim(),
+        origin:               formData.origin.trim(),
+        destination:          formData.destination.trim(),
         scheduled_start_time: formData.scheduled_start_time,
-        total_capacity:      formData.total_capacity,
-        fare:                formData.fare,
-        currency:            formData.currency || "ETB",
-        driver_id:           formData.driver_id || undefined,
-        bus_id:              formData.bus_id || undefined,
+        total_capacity:       formData.total_capacity,
+        fare:                 formData.fare,
+        currency:             formData.currency || "ETB",
+        driver_id:            formData.driver_id || undefined,
+        bus_id:               formData.bus_id || undefined,
       });
       setEditTrip(null);
       await loadTrips();
@@ -267,7 +266,7 @@ export function TripManagement() {
     } finally { setLoading(false); }
   };
 
-  /* ── Delete ────────────────────────────────────────────────────────── */
+  /* ── Delete ──────────────────────────────────────────────────────── */
   const handleDelete = async () => {
     if (!deleteTrip) return;
     setDeleteLoading(true);
@@ -282,63 +281,38 @@ export function TripManagement() {
     } finally { setDeleteLoading(false); }
   };
 
-  /* ── Table columns ─────────────────────────────────────────────────── */
+  /* ── Table columns ───────────────────────────────────────────────── */
   const columns: Column<Trip>[] = [
-    {
-      key: "route", label: "Route",
-      render: (trip) => (
-        <span className="font-medium text-foreground">{trip.origin} → {trip.destination}</span>
-      ),
-    },
-    {
-      key: "scheduled_start_time", label: "Departure",
-      render: (trip) => (
-        <span className="text-foreground">{new Date(trip.scheduled_start_time).toLocaleString()}</span>
-      ),
-    },
-    {
-      key: "total_capacity", label: "Seats",
-      render: (trip) => <span className="text-foreground">{trip.total_capacity}</span>,
-    },
-    {
-      key: "fare", label: "Fare",
-      render: (trip) => <span className="text-foreground">{trip.fare} {trip.currency}</span>,
-    },
-    {
-      key: "status", label: "Status",
-      render: (trip) => <StatusBadge status={trip.status} />,
-    },
-    {
-      key: "actions", label: "Actions",
-      render: (trip) => (
+    { key: "route", label: "Route",
+      render: (t) => <span className="font-medium text-foreground">{t.origin} → {t.destination}</span> },
+    { key: "scheduled_start_time", label: "Departure",
+      render: (t) => <span className="text-foreground">{new Date(t.scheduled_start_time).toLocaleString()}</span> },
+    { key: "total_capacity", label: "Seats",
+      render: (t) => <span className="text-foreground">{t.total_capacity}</span> },
+    { key: "fare", label: "Fare",
+      render: (t) => <span className="text-foreground">{t.fare} {t.currency}</span> },
+    { key: "status", label: "Status",
+      render: (t) => <StatusBadge status={t.status} /> },
+    { key: "actions", label: "Actions",
+      render: (t) => (
         <div className="flex gap-2">
-          <button
-            onClick={() => openEdit(trip)}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-            title="Edit trip"
-          >
+          <button onClick={() => openEdit(t)} className="p-2 hover:bg-muted rounded-lg transition-colors" title="Edit">
             <Edit className="h-4 w-4 text-foreground" />
           </button>
-          <button
-            onClick={() => setDeleteTrip(trip)}
-            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete trip"
-          >
+          <button onClick={() => setDeleteTrip(t)} className="p-2 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
             <Trash2 className="h-4 w-4 text-destructive" />
           </button>
         </div>
-      ),
-    },
+      ) },
   ];
 
-  const filteredTrips = trips.filter(trip => {
-    const route = `${trip.origin} → ${trip.destination}`;
-    const matchesSearch = route.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = selectedStatus === "all" || trip.status === selectedStatus;
-    return matchesSearch && matchesStatus;
+  const filteredTrips = trips.filter(t => {
+    const route = `${t.origin} → ${t.destination}`;
+    return route.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (selectedStatus === "all" || t.status === selectedStatus);
   });
 
-  /* ── Render ────────────────────────────────────────────────────────── */
+  /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <MainLayout>
       <div className="space-y-8">
@@ -348,9 +322,7 @@ export function TripManagement() {
               <h1 className="text-4xl font-bold text-foreground mb-2">Trip Management</h1>
               <p className="text-muted-foreground">Schedule and manage transportation trips</p>
             </div>
-            <Button onClick={openCreate}>
-              <Plus className="h-5 w-5 mr-2" /> Create Trip
-            </Button>
+            <Button onClick={openCreate}><Plus className="h-5 w-5 mr-2" /> Create Trip</Button>
           </div>
         </motion.div>
 
@@ -377,16 +349,14 @@ export function TripManagement() {
           <DataTable columns={columns} data={filteredTrips} emptyMessage="No trips found" />
         </motion.div>
 
-        {/* ── Create Trip Modal ─────────────────────────────────────── */}
+        {/* Create Modal */}
         <Modal isOpen={isCreateOpen} onClose={() => { setIsCreateOpen(false); setFormError(null); }}
           title="Create New Trip" maxWidth="lg">
           <div className="space-y-4">
-            <TripForm formData={formData} formError={formError} buses={buses} drivers={drivers} onChange={handleChange} />
+            <TripForm formData={formData} formError={formError} buses={buses} drivers={drivers} onChange={handleChangeWithBus} />
             <div className="flex gap-3 pt-2">
               <Button variant="secondary" className="flex-1"
-                onClick={() => { setIsCreateOpen(false); setFormError(null); }} disabled={loading}>
-                Cancel
-              </Button>
+                onClick={() => { setIsCreateOpen(false); setFormError(null); }} disabled={loading}>Cancel</Button>
               <Button className="flex-1" onClick={handleCreate} loading={loading}
                 disabled={!formData.driver_id || !formData.origin.trim() || !formData.destination.trim() || !formData.scheduled_start_time}>
                 Create Trip
@@ -395,16 +365,14 @@ export function TripManagement() {
           </div>
         </Modal>
 
-        {/* ── Edit Trip Modal ───────────────────────────────────────── */}
+        {/* Edit Modal */}
         <Modal isOpen={!!editTrip} onClose={() => { setEditTrip(null); setFormError(null); }}
           title="Edit Trip" maxWidth="lg">
           <div className="space-y-4">
-            <TripForm formData={formData} formError={formError} buses={buses} drivers={drivers} onChange={handleChange} />
+            <TripForm formData={formData} formError={formError} buses={buses} drivers={drivers} onChange={handleChangeWithBus} />
             <div className="flex gap-3 pt-2">
               <Button variant="secondary" className="flex-1"
-                onClick={() => { setEditTrip(null); setFormError(null); }} disabled={loading}>
-                Cancel
-              </Button>
+                onClick={() => { setEditTrip(null); setFormError(null); }} disabled={loading}>Cancel</Button>
               <Button className="flex-1" onClick={handleUpdate} loading={loading}
                 disabled={!formData.driver_id || !formData.origin.trim() || !formData.destination.trim() || !formData.scheduled_start_time}>
                 Save Changes
@@ -413,7 +381,7 @@ export function TripManagement() {
           </div>
         </Modal>
 
-        {/* ── Delete Confirm Modal ──────────────────────────────────── */}
+        {/* Delete Modal */}
         <Modal isOpen={!!deleteTrip} onClose={() => setDeleteTrip(null)} title="Delete Trip">
           <div className="space-y-5">
             <p className="text-foreground">
@@ -424,17 +392,12 @@ export function TripManagement() {
               All reserved / pending bookings will be cancelled. This action cannot be undone.
             </p>
             <div className="flex gap-3">
-              <Button variant="secondary" className="flex-1" onClick={() => setDeleteTrip(null)} disabled={deleteLoading}>
-                Cancel
-              </Button>
-              <Button variant="destructive" className="flex-1" onClick={handleDelete} loading={deleteLoading}>
-                Delete Trip
-              </Button>
+              <Button variant="secondary" className="flex-1" onClick={() => setDeleteTrip(null)} disabled={deleteLoading}>Cancel</Button>
+              <Button variant="destructive" className="flex-1" onClick={handleDelete} loading={deleteLoading}>Delete Trip</Button>
             </div>
           </div>
         </Modal>
 
-        {/* ── Toast ────────────────────────────────────────────────── */}
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
     </MainLayout>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { useNavigate, useParams } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { MainLayout } from "../routes/MainLayout";
@@ -55,7 +55,7 @@ interface TripEditFormProps {
   onChange: (field: keyof FormData, value: string | number) => void;
 }
 
-function TripEditForm({ formData, formError, buses, drivers, onChange }: TripEditFormProps) {
+const TripEditForm = memo(function TripEditForm({ formData, formError, buses, drivers, onChange }: TripEditFormProps) {
   return (
     <div className="space-y-4">
       {formError && (
@@ -117,7 +117,7 @@ function TripEditForm({ formData, formError, buses, drivers, onChange }: TripEdi
       </div>
     </div>
   );
-}
+});
 
 /* ── Main component ────────────────────────────────────────────────────── */
 export function TripDetails() {
@@ -194,17 +194,20 @@ export function TripDetails() {
   };
 
   /* ── Form field change ─────────────────────────────────────────────── */
-  const handleChange = (field: keyof FormData, value: string | number) => {
+  const handleChange = useCallback((field: keyof FormData, value: string | number) => {
     setFormData(prev => {
       const next = { ...prev, [field]: value };
       if (field === "bus_id") {
-        const bus = buses.find(b => b.id === value);
-        if (bus) next.total_capacity = bus.capacity;
+        setBuses(bs => {
+          const bus = bs.find(b => b.id === value);
+          if (bus) next.total_capacity = bus.capacity;
+          return bs;
+        });
       }
       return next;
     });
     setFormError(null);
-  };
+  }, []);
 
   /* ── Validate ──────────────────────────────────────────────────────── */
   const validate = (): string | null => {

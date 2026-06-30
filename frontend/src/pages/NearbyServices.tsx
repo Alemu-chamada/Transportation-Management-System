@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { MainLayout } from "../routes/MainLayout";
 import { Card } from "../shared/ui/Card";
@@ -78,7 +78,7 @@ interface ServiceFormProps {
   onSubmit: () => void;
 }
 
-function ServiceForm({
+const ServiceForm = memo(function ServiceForm({
   formData, formError, formLoading, isEditing,
   onChange, onMapsLinkChange, onCancel, onSubmit,
 }: ServiceFormProps) {
@@ -125,19 +125,7 @@ function ServiceForm({
       </div>
     </div>
   );
-}
-  const patterns = [
-    /@(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-    /[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-    /!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/,
-    /ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/,
-  ];
-  for (const p of patterns) {
-    const m = url.match(p);
-    if (m) return { lat: m[1], lng: m[2] };
-  }
-  return null;
-}
+});
 
 // Extract lat/lng from a Google Maps link
 function extractCoordsFromMapsLink(url: string): { lat: string; lng: string } | null {
@@ -153,7 +141,8 @@ function extractCoordsFromMapsLink(url: string): { lat: string; lng: string } | 
   }
   return null;
 }
-  const { user } = useAuth();
+
+export function NearbyServices() {
   const isAdmin = user?.role === "system_admin";
 
   const [services, setServices] = useState<Service[]>([]);
@@ -250,19 +239,19 @@ function extractCoordsFromMapsLink(url: string): { lat: string; lng: string } | 
     setFormError(null);
   };
 
-  const handleMapsLinkChange = (val: string) => {
+  const handleMapsLinkChange = useCallback((val: string) => {
     const coords = extractCoordsFromMapsLink(val);
     if (coords) {
       setFormData(p => ({ ...p, maps_link: val, latitude: coords.lat, longitude: coords.lng }));
     } else {
       setFormData(p => ({ ...p, maps_link: val }));
     }
-  };
+  }, []);
 
-  const handleFormChange = (field: keyof typeof EMPTY_FORM, value: string) => {
+  const handleFormChange = useCallback((field: keyof typeof EMPTY_FORM, value: string) => {
     setFormData(p => ({ ...p, [field]: value }));
     setFormError(null);
-  };
+  }, []);
 
   const handleCreate = async () => {
     if (!formData.name.trim()) { setFormError("Name is required."); return; }
